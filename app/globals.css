@@ -1,104 +1,117 @@
-:root {
-    --bg: #f6f4ef;
-    --paper: #ffffff;
-    --ink: #1c1c1c;
-    --muted: #5c5b57;
-    --line: #ddd6c8;
-    --accent: #175c4c;
-    --accent-2: #c2761f;
-    --danger: #ad3a2f;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@plugin "daisyui" {
+    themes: hillwalk --default, light, autumn, forest, corporate, dim;
 }
 
-* {
-    box-sizing: border-box;
+@plugin "daisyui/theme" {
+    name: "hillwalk";
+    default: true;
+    prefersdark: false;
+    color-scheme: "light";
+
+    --color-primary: #0f8a84;
+    --color-secondary: #3aa5a0;
+    --color-accent: #1b9f98;
+    --color-neutral: #2d353d;
+    --color-base-100: #f7f8fa;
+    --color-base-200: #eceff3;
+    --color-base-300: #dbe0e7;
+    --color-info: #3f88c5;
+    --color-success: #2a9d8f;
+    --color-warning: #d98d3f;
+    --color-error: #d45a5a;
 }
 
-body {
-    margin: 0;
-    color: var(--ink);
-    font-family: "Source Sans 3", "Trebuchet MS", sans-serif;
-    background:
-        radial-gradient(circle at 10% 15%, rgba(194, 118, 31, 0.09), transparent 35%),
-        radial-gradient(circle at 80% 10%, rgba(23, 92, 76, 0.12), transparent 30%),
-        linear-gradient(180deg, #faf8f2 0%, #f1ece1 60%, #efe8da 100%);
-    min-height: 100vh;
+@layer base {
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        min-height: 100vh;
+        text-rendering: geometricPrecision;
+        font-size: clamp(16px, 1rem + 0.15vw, 18px);
+        line-height: 1.7;
+    }
+
+    p {
+        line-height: 1.78;
+    }
+
+    label {
+        line-height: 1.6;
+    }
 }
 
-a {
-    color: inherit;
+@layer components {
+    .admin-shell {
+        position: relative;
+        margin: 0 auto;
+        width: 100%;
+        max-width: 72rem;
+        padding: 2rem 1rem;
+    }
+
+    .public-shell {
+        position: relative;
+        margin: 0 auto;
+        width: 100%;
+        max-width: 68rem;
+        padding: 2rem 1rem;
+    }
+
+    .hill-backdrop {
+        background:
+            radial-gradient(1100px 560px at 6% -14%, rgba(15, 138, 132, 0.2), transparent 62%),
+            radial-gradient(950px 500px at 95% -8%, rgba(58, 165, 160, 0.2), transparent 64%),
+            linear-gradient(180deg, #eff2f6 0%, #e7ebf2 100%);
+    }
+
+    .hill-pattern::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        opacity: 0.4;
+        background-image: linear-gradient(120deg, rgba(63, 87, 60, 0.14) 1px, transparent 1px);
+        background-size: 22px 22px;
+        mask-image: linear-gradient(to bottom, black 5%, transparent 80%);
+    }
+
+    .grain-overlay::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.13;
+        background-image: radial-gradient(rgba(53, 49, 38, 0.32) 0.55px, transparent 0.55px);
+        background-size: 3px 3px;
+        mix-blend-mode: multiply;
+    }
+
+    .glass-card {
+        backdrop-filter: blur(10px);
+        background: linear-gradient(145deg,
+                rgba(255, 255, 255, 0.9) 0%,
+                rgba(255, 255, 255, 0.78) 100%);
+    }
+
+    .admin-backdrop {
+        background:
+            radial-gradient(900px 420px at 8% -10%, rgba(15, 138, 132, 0.16), transparent 62%),
+            radial-gradient(900px 420px at 100% 5%, rgba(72, 84, 99, 0.12), transparent 65%),
+            linear-gradient(180deg, #f0f2f6 0%, #e8ecf2 100%);
+    }
 }
 
-.container {
-    width: min(1100px, 92vw);
-    margin: 0 auto;
-    padding: 2rem 0 4rem;
-}
+@media (min-width: 768px) {
 
-.card {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
-}
-
-h1,
-h2,
-h3 {
-    font-family: "Fraunces", Georgia, serif;
-    letter-spacing: 0.2px;
-    margin-top: 0;
-}
-
-button,
-input,
-select {
-    font: inherit;
-}
-
-.btn {
-    border: 0;
-    border-radius: 10px;
-    padding: 0.7rem 1rem;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-.btn-primary {
-    background: var(--accent);
-    color: #fff;
-}
-
-.btn-secondary {
-    background: #fff;
-    border: 1px solid var(--line);
-}
-
-.badge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    font-size: 0.82rem;
-    padding: 0.2rem 0.65rem;
-}
-
-.badge.confirmed {
-    background: rgba(23, 92, 76, 0.12);
-    color: var(--accent);
-}
-
-.badge.waitlist {
-    background: rgba(173, 58, 47, 0.12);
-    color: var(--danger);
-}
-
-.grid-two {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 1rem;
-}
-
-@media (max-width: 900px) {
-    .grid-two {
-        grid-template-columns: 1fr;
+    .admin-shell,
+    .public-shell {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
     }
 }

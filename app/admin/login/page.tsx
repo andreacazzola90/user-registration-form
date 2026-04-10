@@ -3,6 +3,30 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import {
+  Box,
+  Paper,
+  Stack,
+  TextField,
+  Button,
+  Typography,
+  ThemeProvider,
+  createTheme,
+  Alert,
+} from "@mui/material";
+import PersonIcon from "@mui/icons-material/Person";
+
+const adminTheme = createTheme({
+  palette: {
+    primary: { main: "#0f8a84" },
+    background: { default: "#eef2f6", paper: "#ffffff" },
+  },
+  shape: { borderRadius: 10 },
+  typography: {
+    fontFamily: "var(--font-sans)",
+    h4: { fontFamily: "var(--font-serif)", fontWeight: 700 },
+  },
+});
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -36,63 +60,106 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="container" style={{ maxWidth: "560px" }}>
-      <section className="card" style={{ padding: "1.5rem" }}>
-        <h1>Area Admin</h1>
-        <p style={{ color: "var(--muted)" }}>
-          Accedi per gestire iscrizioni, campi, export e QR.
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <label
-            htmlFor="email"
-            style={{ display: "block", marginBottom: "0.7rem" }}
-          >
-            Email
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{
-                width: "100%",
-                marginTop: "0.35rem",
-                padding: "0.65rem",
-                borderRadius: "9px",
-                border: "1px solid var(--line)",
+    <ThemeProvider theme={adminTheme}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          bgcolor: "#eef2f6",
+          py: 2,
+          px: 1,
+        }}
+      >
+        <Stack
+          sx={{
+            width: "100%",
+            maxWidth: 420,
+          }}
+        >
+          <Paper elevation={2} sx={{ overflow: "hidden", borderRadius: 3 }}>
+            <Box
+              sx={{
+                background: "linear-gradient(135deg, #0f8a84 0%, #0d7473 100%)",
+                color: "white",
+                p: 3,
               }}
-              required
-            />
-          </label>
+            >
+              <Box sx={{ display: "inline-flex", mb: 2 }}>
+                <Box
+                  sx={{
+                    backgroundColor: "rgba(255,255,255,0.95)",
+                    borderRadius: "50%",
+                    p: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <PersonIcon sx={{ color: "#0f8a84", fontSize: 28 }} />
+                </Box>
+              </Box>
+              <Typography
+                sx={{ fontSize: 12, color: "rgba(255,255,255,0.8)", mb: 1 }}
+              >
+                Welcome
+              </Typography>
+              <Typography variant="h4" sx={{ color: "white" }}>
+                Sign In
+              </Typography>
+            </Box>
 
-          <label
-            htmlFor="password"
-            style={{ display: "block", marginBottom: "0.7rem" }}
-          >
-            Password
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: "100%",
-                marginTop: "0.35rem",
-                padding: "0.65rem",
-                borderRadius: "9px",
-                border: "1px solid var(--line)",
-              }}
-              required
-            />
-          </label>
+            <Box sx={{ p: 3.5 }}>
+              <form onSubmit={handleSubmit}>
+                <Stack spacing={3}>
+                  <TextField
+                    id="email"
+                    type="email"
+                    label="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                  />
 
-          <button className="btn btn-primary" type="submit" disabled={loading}>
-            {loading ? "Accesso..." : "Accedi"}
-          </button>
+                  <TextField
+                    id="password"
+                    type="password"
+                    label="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                  />
 
-          {error && <p style={{ color: "var(--danger)" }}>{error}</p>}
-        </form>
-      </section>
-    </main>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    variant="contained"
+                    fullWidth
+                    sx={{
+                      backgroundColor: "#0f8a84",
+                      textTransform: "none",
+                      fontSize: 15,
+                      fontWeight: 600,
+                      py: 1.2,
+                    }}
+                  >
+                    {loading ? "Accesso..." : "Sign In"}
+                  </Button>
+
+                  {error && <Alert severity="error">{error}</Alert>}
+                </Stack>
+              </form>
+            </Box>
+          </Paper>
+        </Stack>
+      </Box>
+    </ThemeProvider>
   );
 }

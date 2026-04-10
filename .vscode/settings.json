@@ -1,0 +1,7 @@
+{
+  "css.lint.validProperties": ["composes"],
+  "css.validate": true,
+  "[css]": {
+    "editor.defaultFormatter": null
+  }
+}
