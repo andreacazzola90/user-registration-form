@@ -1,0 +1,47 @@
+{
+  "name": "user-registration-form",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Registration form with Supabase-backed admin dashboard",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "migrate:init": "node scripts/migrate-init.mjs",
+    "seed:admin": "node scripts/seed-admin.mjs",
+    "seed:tables": "node scripts/seed-tables.mjs",
+    "seed:all": "npm run migrate:init && npm run seed:tables && npm run seed:admin"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andreacazzola90/user-registration-form.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/andreacazzola90/user-registration-form/issues"
+  },
+  "homepage": "https://github.com/andreacazzola90/user-registration-form#readme",
+  "dependencies": {
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.103.0",
+    "exceljs": "^4.4.0",
+    "next": "^16.2.3",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "resend": "^6.10.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.3",
+    "typescript": "^6.0.2"
+  }
+}
