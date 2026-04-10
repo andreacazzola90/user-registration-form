@@ -1,0 +1,104 @@
+:root {
+    --bg: #f6f4ef;
+    --paper: #ffffff;
+    --ink: #1c1c1c;
+    --muted: #5c5b57;
+    --line: #ddd6c8;
+    --accent: #175c4c;
+    --accent-2: #c2761f;
+    --danger: #ad3a2f;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    color: var(--ink);
+    font-family: "Source Sans 3", "Trebuchet MS", sans-serif;
+    background:
+        radial-gradient(circle at 10% 15%, rgba(194, 118, 31, 0.09), transparent 35%),
+        radial-gradient(circle at 80% 10%, rgba(23, 92, 76, 0.12), transparent 30%),
+        linear-gradient(180deg, #faf8f2 0%, #f1ece1 60%, #efe8da 100%);
+    min-height: 100vh;
+}
+
+a {
+    color: inherit;
+}
+
+.container {
+    width: min(1100px, 92vw);
+    margin: 0 auto;
+    padding: 2rem 0 4rem;
+}
+
+.card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+h1,
+h2,
+h3 {
+    font-family: "Fraunces", Georgia, serif;
+    letter-spacing: 0.2px;
+    margin-top: 0;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+.btn {
+    border: 0;
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: #fff;
+}
+
+.btn-secondary {
+    background: #fff;
+    border: 1px solid var(--line);
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    padding: 0.2rem 0.65rem;
+}
+
+.badge.confirmed {
+    background: rgba(23, 92, 76, 0.12);
+    color: var(--accent);
+}
+
+.badge.waitlist {
+    background: rgba(173, 58, 47, 0.12);
+    color: var(--danger);
+}
+
+.grid-two {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 900px) {
+    .grid-two {
+        grid-template-columns: 1fr;
+    }
+}
