@@ -1,6 +1,20 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import {
+  Alert,
+  Box,
+  Button,
+  Divider,
+  MenuItem,
+  Paper,
+  Stack,
+  TextField,
+  ThemeProvider,
+  Typography,
+  createTheme,
+} from "@mui/material";
 import type { RegistrationField, RegistrationStatus } from "@/lib/types";
 
 type Props = {
@@ -19,6 +33,18 @@ const NUMBER_KEYS = new Set([
   "adults",
 ]);
 
+const formTheme = createTheme({
+  palette: {
+    primary: { main: "#0f8a84" },
+    background: { default: "#eef2f6", paper: "#ffffff" },
+  },
+  shape: { borderRadius: 10 },
+  typography: {
+    fontFamily: "var(--font-sans)",
+    h4: { fontFamily: "var(--font-serif)", fontWeight: 700 },
+  },
+});
+
 export function RegistrationForm({ fields }: Props) {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,6 +54,8 @@ export function RegistrationForm({ fields }: Props) {
     () => [...fields].sort((a, b) => a.sort_order - b.sort_order),
     [fields],
   );
+
+  const requiredCount = orderedFields.filter((field) => field.required).length;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -74,96 +102,133 @@ export function RegistrationForm({ fields }: Props) {
   }
 
   function renderField(field: RegistrationField) {
-    const common = {
+    const value = formData[field.key] ?? "";
+
+    const commonProps = {
       id: field.key,
       name: field.key,
       required: field.required,
-      value: formData[field.key] ?? "",
-      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-        setFormData((prev) => ({ ...prev, [field.key]: e.target.value })),
-      style: {
-        width: "100%",
-        padding: "0.65rem 0.75rem",
-        border: "1px solid var(--line)",
-        borderRadius: "9px",
-        marginTop: "0.35rem",
+      value,
+      size: "small" as const,
+      fullWidth: true,
+      onChange: (
+        event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+      ) =>
+        setFormData((prev) => ({ ...prev, [field.key]: event.target.value })),
+      sx: {
+        mt: 0.5,
+        "& .MuiOutlinedInput-root": {
+          backgroundColor: "#fff",
+        },
       },
     };
 
     if (field.field_type === "select") {
       return (
-        <select {...common}>
-          <option value="">Seleziona...</option>
+        <TextField {...commonProps} select>
+          <MenuItem value="">Seleziona...</MenuItem>
           {field.options.map((option) => (
-            <option key={option} value={option}>
+            <MenuItem key={option} value={option}>
               {option}
-            </option>
+            </MenuItem>
           ))}
-        </select>
+        </TextField>
       );
     }
 
     return (
-      <input
-        {...common}
+      <TextField
+        {...commonProps}
         type={field.field_type === "number" ? "number" : field.field_type}
-        min={field.field_type === "number" ? 0 : undefined}
+        slotProps={
+          field.field_type === "number" ? { htmlInput: { min: 0 } } : undefined
+        }
       />
     );
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2 style={{ marginBottom: "1rem" }}>Modulo di Iscrizione</h2>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr",
-          gap: "0.9rem",
-          maxWidth: "560px",
-        }}
+    <ThemeProvider theme={formTheme}>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{ width: "100%", maxWidth: 740, mx: "auto" }}
       >
-        {orderedFields.map((field) => (
-          <label key={field.id} htmlFor={field.key}>
-            <span style={{ fontWeight: 600 }}>{field.label}</span>
-            {renderField(field)}
-          </label>
-        ))}
-      </div>
-
-      <div
-        style={{
-          marginTop: "1rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.8rem",
-        }}
-      >
-        <button
-          className="btn btn-primary"
-          disabled={isSubmitting}
-          type="submit"
+        <Paper
+          elevation={0}
+          sx={{ border: "1px solid #d9dfe7", p: { xs: 2.5, md: 4 } }}
         >
-          {isSubmitting ? "Invio in corso..." : "Conferma iscrizione"}
-        </button>
-      </div>
+          <Typography variant="h4" sx={{ mb: 1 }}>
+            Personal information
+          </Typography>
+          <Typography sx={{ color: "#5f6c76", mb: 2.5 }}>
+            All fields marked with a (*) are required. Campi richiesti:{" "}
+            {requiredCount}.
+          </Typography>
 
-      {result && (
-        <p
-          style={{
-            marginTop: "1rem",
-            padding: "0.7rem 0.8rem",
-            borderRadius: "9px",
-            background: result.ok
-              ? "rgba(23, 92, 76, 0.12)"
-              : "rgba(173, 58, 47, 0.12)",
-            color: result.ok ? "var(--accent)" : "var(--danger)",
-          }}
-        >
-          {result.message}
-        </p>
-      )}
-    </form>
+          <Divider sx={{ mb: 2.5 }} />
+
+          <Typography sx={{ fontSize: 24, fontWeight: 700, mb: 0.75 }}>
+            About you
+          </Typography>
+          <Typography sx={{ color: "#62707c", mb: 2.5 }}>
+            Compila i campi seguenti per completare l&apos;iscrizione.
+          </Typography>
+
+          <Stack spacing={2.25}>
+            {orderedFields.map((field) => (
+              <Box
+                key={field.id}
+                sx={{
+                  border: "1px solid #d7dee6",
+                  borderRadius: 2,
+                  p: 2,
+                  backgroundColor: "#f8fafc",
+                }}
+              >
+                <Typography
+                  sx={{ fontWeight: 700, color: "#2d3943", mb: 0.75 }}
+                >
+                  {field.label}
+                  {field.required ? " *" : ""}
+                </Typography>
+                {renderField(field)}
+              </Box>
+            ))}
+          </Stack>
+
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={1.5}
+            sx={{
+              alignItems: { xs: "stretch", md: "center" },
+              justifyContent: "space-between",
+              mt: 3,
+              pt: 2.5,
+              borderTop: "1px solid #dde3ea",
+            }}
+          >
+            <Typography sx={{ color: "#61707b", fontSize: 14 }}>
+              Riceverai una mail di conferma o lista d&apos;attesa.
+            </Typography>
+            <Button
+              variant="contained"
+              type="submit"
+              disabled={isSubmitting}
+              endIcon={<ArrowForwardIcon />}
+              sx={{ textTransform: "none", fontWeight: 700, px: 3 }}
+            >
+              {isSubmitting ? "Invio in corso..." : "Conferma iscrizione"}
+            </Button>
+          </Stack>
+        </Paper>
+
+        {result && (
+          <Alert severity={result.ok ? "success" : "error"} sx={{ mt: 2 }}>
+            {result.message}
+          </Alert>
+        )}
+      </Box>
+    </ThemeProvider>
   );
 }

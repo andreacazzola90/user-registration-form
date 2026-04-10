@@ -33,26 +33,10 @@ export default async function HomePage() {
   const fields = await getFields();
 
   return (
-    <main className="container">
-      <section
-        className="card"
-        style={{ padding: "2rem", marginBottom: "1rem" }}
-      >
-        <h1
-          style={{ fontSize: "clamp(2rem, 4vw, 3rem)", marginBottom: "0.5rem" }}
-        >
-          Passeggiata Monte di Malo
-        </h1>
-        <p style={{ color: "var(--muted)", margin: 0 }}>
-          Iscriviti online. I posti ai laboratori bambini ({">3 anni"}) sono
-          limitati. Al superamento del limite, le nuove iscrizioni entrano
-          automaticamente in lista d&apos;attesa.
-        </p>
-      </section>
-
-      <section className="card" style={{ padding: "1.5rem" }}>
+    <main className="admin-backdrop min-h-screen">
+      <div className="public-shell py-8 md:py-12">
         <RegistrationForm fields={fields.filter((field) => field.active)} />
-      </section>
+      </div>
     </main>
   );
 }

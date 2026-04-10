@@ -1,7 +1,13 @@
 import { redirect } from "next/navigation";
+import { AdminDashboardClient } from "@/components/AdminDashboardClient";
 import { AdminDashboardTabs } from "@/components/AdminDashboardTabs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { RegistrationField, RegistrationRecord } from "@/lib/types";
+import { Box, Button, Chip, Stack, Typography } from "@mui/material";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import TableChartIcon from "@mui/icons-material/TableChart";
+import QrCode2Icon from "@mui/icons-material/QrCode2";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 export const dynamic = "force-dynamic";
 
@@ -52,46 +58,117 @@ export default async function AdminDashboardPage() {
   const data = await getDashboardData();
 
   return (
-    <main className="container">
-      <section
-        className="card"
-        style={{ padding: "1.2rem", marginBottom: "1rem" }}
-      >
-        <h1 style={{ marginBottom: "0.3rem" }}>Dashboard Admin</h1>
-        <p style={{ color: "var(--muted)", marginTop: 0 }}>
-          Sessione: {data.email} | Capienza laboratori: {data.capacity}
-        </p>
-        <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
-          <a className="btn btn-secondary" href="/api/export/csv">
-            Download CSV
-          </a>
-          <a className="btn btn-secondary" href="/api/export/xlsx">
-            Download XLSX
-          </a>
-          <a
-            className="btn btn-secondary"
-            href="/api/qr"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Apri QR iscrizione
-          </a>
-          <a
-            className="btn btn-secondary"
-            href="/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Vai al modulo pubblico
-          </a>
-        </div>
-      </section>
+    <AdminDashboardClient>
+      <Box sx={{ maxWidth: 1400, mx: "auto" }}>
+        <Box
+          component="section"
+          sx={{
+            background: "linear-gradient(135deg, #0f8a84 0%, #0d7473 100%)",
+            color: "white",
+            p: { xs: 2.5, md: 4 },
+            mb: 3,
+            borderRadius: 2,
+          }}
+        >
+          <Stack spacing={2.5}>
+            <Box>
+              <Chip
+                icon={<QrCode2Icon />}
+                label="Control Room"
+                sx={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  color: "white",
+                  fontWeight: 600,
+                  mb: 1,
+                }}
+              />
+              <Typography variant="h4" sx={{ color: "white", mb: 1 }}>
+                Dashboard Admin
+              </Typography>
+              <Typography sx={{ color: "rgba(255,255,255,0.85)" }}>
+                Sessione: {data.email}
+              </Typography>
+            </Box>
 
-      <AdminDashboardTabs
-        fields={data.fields}
-        registrations={data.registrations}
-        capacity={data.capacity}
-      />
-    </main>
+            <Stack direction="row" spacing={1.5} sx={{ flexWrap: "wrap" }}>
+              <Button
+                href="/api/export/csv"
+                variant="outlined"
+                size="small"
+                startIcon={<FileDownloadIcon />}
+                sx={{
+                  color: "white",
+                  borderColor: "rgba(255,255,255,0.3)",
+                  "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+                }}
+              >
+                Download CSV
+              </Button>
+              <Button
+                href="/api/export/xlsx"
+                variant="outlined"
+                size="small"
+                startIcon={<TableChartIcon />}
+                sx={{
+                  color: "white",
+                  borderColor: "rgba(255,255,255,0.3)",
+                  "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+                }}
+              >
+                Download XLSX
+              </Button>
+              <Button
+                href="/api/qr"
+                target="_blank"
+                rel="noreferrer"
+                variant="outlined"
+                size="small"
+                startIcon={<QrCode2Icon />}
+                sx={{
+                  color: "white",
+                  borderColor: "rgba(255,255,255,0.3)",
+                  "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+                }}
+              >
+                Apri QR iscrizione
+              </Button>
+              <Button
+                href="/"
+                target="_blank"
+                rel="noreferrer"
+                variant="contained"
+                size="small"
+                endIcon={<OpenInNewIcon />}
+                sx={{
+                  backgroundColor: "white",
+                  color: "#0f8a84",
+                  fontWeight: 600,
+                  "&:hover": { backgroundColor: "rgba(255,255,255,0.9)" },
+                }}
+              >
+                Vai al modulo pubblico
+              </Button>
+            </Stack>
+
+            <Box sx={{ pt: 1 }}>
+              <Chip
+                label={`Capienza laboratori: ${data.capacity}`}
+                sx={{
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  color: "white",
+                  fontWeight: 600,
+                }}
+              />
+            </Box>
+          </Stack>
+        </Box>
+
+        <AdminDashboardTabs
+          fields={data.fields}
+          registrations={data.registrations}
+          capacity={data.capacity}
+        />
+      </Box>
+    </AdminDashboardClient>
   );
 }
