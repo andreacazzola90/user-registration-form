@@ -3,115 +3,146 @@
 @tailwind utilities;
 
 @plugin "daisyui" {
-    themes: hillwalk --default, light, autumn, forest, corporate, dim;
+  themes:
+    hillwalk --default,
+    light,
+    autumn,
+    forest,
+    corporate,
+    dim;
 }
 
 @plugin "daisyui/theme" {
-    name: "hillwalk";
-    default: true;
-    prefersdark: false;
-    color-scheme: "light";
+  name: "hillwalk";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
 
-    --color-primary: #0f8a84;
-    --color-secondary: #3aa5a0;
-    --color-accent: #1b9f98;
-    --color-neutral: #2d353d;
-    --color-base-100: #f7f8fa;
-    --color-base-200: #eceff3;
-    --color-base-300: #dbe0e7;
-    --color-info: #3f88c5;
-    --color-success: #2a9d8f;
-    --color-warning: #d98d3f;
-    --color-error: #d45a5a;
+  --color-primary: #0f8a84;
+  --color-secondary: #3aa5a0;
+  --color-accent: #1b9f98;
+  --color-neutral: #2d353d;
+  --color-base-100: #f7f8fa;
+  --color-base-200: #eceff3;
+  --color-base-300: #dbe0e7;
+  --color-info: #3f88c5;
+  --color-success: #2a9d8f;
+  --color-warning: #d98d3f;
+  --color-error: #d45a5a;
 }
 
 @layer base {
-    * {
-        box-sizing: border-box;
-    }
+  * {
+    box-sizing: border-box;
+  }
 
-    body {
-        min-height: 100vh;
-        text-rendering: geometricPrecision;
-        font-size: clamp(16px, 1rem + 0.15vw, 18px);
-        line-height: 1.7;
-    }
+  body {
+    min-height: 100vh;
+    text-rendering: geometricPrecision;
+    font-size: clamp(16px, 1rem + 0.15vw, 18px);
+    line-height: 1.7;
+    margin: 0;
+  }
 
-    p {
-        line-height: 1.78;
-    }
+  p {
+    line-height: 1.78;
+  }
 
-    label {
-        line-height: 1.6;
-    }
+  label {
+    line-height: 1.6;
+  }
 }
 
 @layer components {
-    .admin-shell {
-        position: relative;
-        margin: 0 auto;
-        width: 100%;
-        max-width: 72rem;
-        padding: 2rem 1rem;
-    }
+  .admin-shell {
+    position: relative;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 72rem;
+    padding: 2rem 1rem;
+  }
 
-    .public-shell {
-        position: relative;
-        margin: 0 auto;
-        width: 100%;
-        max-width: 68rem;
-        padding: 2rem 1rem;
-    }
+  .public-shell {
+    position: relative;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 68rem;
+    padding: 2rem 1rem;
+  }
 
-    .hill-backdrop {
-        background:
-            radial-gradient(1100px 560px at 6% -14%, rgba(15, 138, 132, 0.2), transparent 62%),
-            radial-gradient(950px 500px at 95% -8%, rgba(58, 165, 160, 0.2), transparent 64%),
-            linear-gradient(180deg, #eff2f6 0%, #e7ebf2 100%);
-    }
+  .hill-backdrop {
+    background:
+      radial-gradient(
+        1100px 560px at 6% -14%,
+        rgba(15, 138, 132, 0.2),
+        transparent 62%
+      ),
+      radial-gradient(
+        950px 500px at 95% -8%,
+        rgba(58, 165, 160, 0.2),
+        transparent 64%
+      ),
+      linear-gradient(180deg, #eff2f6 0%, #e7ebf2 100%);
+  }
 
-    .hill-pattern::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        opacity: 0.4;
-        background-image: linear-gradient(120deg, rgba(63, 87, 60, 0.14) 1px, transparent 1px);
-        background-size: 22px 22px;
-        mask-image: linear-gradient(to bottom, black 5%, transparent 80%);
-    }
+  .hill-pattern::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    opacity: 0.4;
+    background-image: linear-gradient(
+      120deg,
+      rgba(63, 87, 60, 0.14) 1px,
+      transparent 1px
+    );
+    background-size: 22px 22px;
+    mask-image: linear-gradient(to bottom, black 5%, transparent 80%);
+  }
 
-    .grain-overlay::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        opacity: 0.13;
-        background-image: radial-gradient(rgba(53, 49, 38, 0.32) 0.55px, transparent 0.55px);
-        background-size: 3px 3px;
-        mix-blend-mode: multiply;
-    }
+  .grain-overlay::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.13;
+    background-image: radial-gradient(
+      rgba(53, 49, 38, 0.32) 0.55px,
+      transparent 0.55px
+    );
+    background-size: 3px 3px;
+    mix-blend-mode: multiply;
+  }
 
-    .glass-card {
-        backdrop-filter: blur(10px);
-        background: linear-gradient(145deg,
-                rgba(255, 255, 255, 0.9) 0%,
-                rgba(255, 255, 255, 0.78) 100%);
-    }
+  .glass-card {
+    backdrop-filter: blur(10px);
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(255, 255, 255, 0.78) 100%
+    );
+  }
 
-    .admin-backdrop {
-        background:
-            radial-gradient(900px 420px at 8% -10%, rgba(15, 138, 132, 0.16), transparent 62%),
-            radial-gradient(900px 420px at 100% 5%, rgba(72, 84, 99, 0.12), transparent 65%),
-            linear-gradient(180deg, #f0f2f6 0%, #e8ecf2 100%);
-    }
+  .admin-backdrop {
+    background:
+      radial-gradient(
+        900px 420px at 8% -10%,
+        rgba(15, 138, 132, 0.16),
+        transparent 62%
+      ),
+      radial-gradient(
+        900px 420px at 100% 5%,
+        rgba(72, 84, 99, 0.12),
+        transparent 65%
+      ),
+      linear-gradient(180deg, #f0f2f6 0%, #e8ecf2 100%);
+  }
 }
 
 @media (min-width: 768px) {
-
-    .admin-shell,
-    .public-shell {
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-    }
+  .admin-shell,
+  .public-shell {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
 }
