@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { Cormorant_Garamond, Nunito } from "next/font/google";
-import { ThemeFloatingMenu } from "@/components/ThemeFloatingMenu";
 import "./globals.css";
 
 const sans = Nunito({
@@ -29,7 +29,7 @@ export default function RootLayout({
       <body
         className={`${sans.variable} ${serif.variable} font-[var(--font-sans)] m-0`}
       >
-        {children}
+        <AppRouterCacheProvider>{children}</AppRouterCacheProvider>
       </body>
     </html>
   );
