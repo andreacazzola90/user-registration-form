@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sendRegistrationRecapEmail } from "@/lib/mail/smtp";
+import {
+  buildManageRegistrationUrls,
+  createRegistrationManageToken,
+} from "@/lib/registration-manage-token";
 import type { RegistrationField } from "@/lib/types";
 
 const payloadSchema = z.record(z.string(), z.union([z.string(), z.number()]));
@@ -106,6 +110,7 @@ export async function POST(request: Request) {
 
     const row = Array.isArray(data) ? data[0] : data;
     const status = row?.status === "waitlist" ? "waitlist" : "confirmed";
+    const registrationId = typeof row?.id === "string" ? row.id : "";
 
     const recapFields = activeFields
       .map((field) => {
@@ -121,11 +126,24 @@ export async function POST(request: Request) {
       .filter((field) => field.value.length > 0);
 
     try {
+      let links: { manageUrl: string; cancelUrl: string } | null = null;
+
+      if (registrationId) {
+        try {
+          const manageToken = createRegistrationManageToken(registrationId, email);
+          links = buildManageRegistrationUrls(registrationId, manageToken);
+        } catch (tokenError) {
+          console.error("Failed to create registration manage links", tokenError);
+        }
+      }
+
       await sendRegistrationRecapEmail({
         to: email,
         fullName: `${firstName} ${lastName}`.trim() || "partecipante",
         status,
         recapFields,
+        manageUrl: links?.manageUrl,
+        cancelUrl: links?.cancelUrl,
       });
     } catch (mailError) {
       console.error("Failed to send registration recap email", mailError);
