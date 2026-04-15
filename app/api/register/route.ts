@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { Resend } from "resend";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { sendRegistrationRecapEmail } from "@/lib/mail/smtp";
 import type { RegistrationField } from "@/lib/types";
 
 const payloadSchema = z.record(z.string(), z.union([z.string(), z.number()]));
@@ -24,38 +24,6 @@ function toNumber(value: string | number | undefined) {
 
   const parsed = Number(value ?? 0);
   return Number.isFinite(parsed) ? parsed : 0;
-}
-
-async function sendConfirmationEmail(
-  email: string,
-  status: "confirmed" | "waitlist",
-  fullName: string,
-) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-
-  if (!apiKey || !from) {
-    return;
-  }
-
-  const resend = new Resend(apiKey);
-
-  if (status === "confirmed") {
-    await resend.emails.send({
-      from,
-      to: email,
-      subject: "Conferma iscrizione - Passeggiata Monte di Malo",
-      html: `<p>Ciao ${fullName},</p><p>la tua iscrizione e stata confermata. Ti aspettiamo alla passeggiata.</p>`,
-    });
-    return;
-  }
-
-  await resend.emails.send({
-    from,
-    to: email,
-    subject: "Iscrizione in lista d'attesa - Passeggiata Monte di Malo",
-    html: `<p>Ciao ${fullName},</p><p>al momento i posti nei laboratori sono completi. Verrai inserito in lista d'attesa e ti contatteremo a breve qualora si aprisse una nuova disponibilita.</p>`,
-  });
 }
 
 export async function POST(request: Request) {
@@ -139,11 +107,29 @@ export async function POST(request: Request) {
     const row = Array.isArray(data) ? data[0] : data;
     const status = row?.status === "waitlist" ? "waitlist" : "confirmed";
 
-    await sendConfirmationEmail(
-      email,
-      status,
-      `${firstName} ${lastName}`.trim(),
-    );
+    const recapFields = activeFields
+      .map((field) => {
+        const raw = payload[field.key];
+        const normalized =
+          typeof raw === "number" ? String(raw) : String(raw ?? "").trim();
+
+        return {
+          label: field.label,
+          value: normalized,
+        };
+      })
+      .filter((field) => field.value.length > 0);
+
+    try {
+      await sendRegistrationRecapEmail({
+        to: email,
+        fullName: `${firstName} ${lastName}`.trim() || "partecipante",
+        status,
+        recapFields,
+      });
+    } catch (mailError) {
+      console.error("Failed to send registration recap email", mailError);
+    }
 
     return NextResponse.json({
       ok: true,
