@@ -34,6 +34,18 @@ const NUMBER_KEYS = new Set([
   "adults",
 ]);
 
+const visuallyHiddenSx = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  p: 0,
+  m: -1,
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+} as const;
+
 const formTheme = createTheme({
   palette: {
     primary: { main: "#0f8a84" },
@@ -58,6 +70,17 @@ export function RegistrationForm({ fields }: Props) {
   );
 
   const requiredCount = orderedFields.filter((field) => field.required).length;
+
+  function focusField(fieldKey: string) {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      const fieldElement = document.getElementById(fieldKey);
+      fieldElement?.focus();
+    });
+  }
 
   function validateField(field: RegistrationField, rawValue: string) {
     const value = rawValue.trim();
@@ -95,6 +118,7 @@ export function RegistrationForm({ fields }: Props) {
 
   function validateForm() {
     const nextErrors: Record<string, string> = {};
+    let firstInvalidFieldKey = "";
 
     orderedFields.forEach((field) => {
       const value = formData[field.key] ?? "";
@@ -102,10 +126,18 @@ export function RegistrationForm({ fields }: Props) {
 
       if (errorMessage) {
         nextErrors[field.key] = errorMessage;
+        if (!firstInvalidFieldKey) {
+          firstInvalidFieldKey = field.key;
+        }
       }
     });
 
     setFieldErrors(nextErrors);
+
+    if (firstInvalidFieldKey) {
+      focusField(firstInvalidFieldKey);
+    }
+
     return Object.keys(nextErrors).length === 0;
   }
 
@@ -172,6 +204,8 @@ export function RegistrationForm({ fields }: Props) {
     const value = formData[field.key] ?? "";
     const errorMessage = fieldErrors[field.key] ?? "";
     const hasError = Boolean(errorMessage);
+    const fieldLabelId = `${field.key}-label`;
+    const fieldHelperTextId = `${field.key}-helper-text`;
 
     const commonProps = {
       id: field.key,
@@ -180,6 +214,11 @@ export function RegistrationForm({ fields }: Props) {
       value,
       error: hasError,
       helperText: errorMessage || " ",
+      FormHelperTextProps: {
+        id: fieldHelperTextId,
+        role: hasError ? ("alert" as const) : undefined,
+        "aria-live": hasError ? ("assertive" as const) : undefined,
+      },
       size: "small" as const,
       fullWidth: true,
       onChange: (
@@ -217,14 +256,27 @@ export function RegistrationForm({ fields }: Props) {
         },
         "& .MuiFormHelperText-root": {
           mt: 0.75,
-          fontSize: 12,
+          fontSize: 13,
+          color: "#43515d",
+        },
+        "& .MuiFormHelperText-root.Mui-error": {
+          color: "#b3261e",
         },
       },
     };
 
     if (field.field_type === "select") {
       return (
-        <TextField {...commonProps} select>
+        <TextField
+          {...commonProps}
+          select
+          slotProps={{
+            htmlInput: {
+              "aria-labelledby": fieldLabelId,
+              "aria-describedby": fieldHelperTextId,
+            },
+          }}
+        >
           <MenuItem value="">Seleziona...</MenuItem>
           {field.options.map((option) => (
             <MenuItem key={option} value={option}>
@@ -239,9 +291,13 @@ export function RegistrationForm({ fields }: Props) {
       <TextField
         {...commonProps}
         type={field.field_type === "number" ? "number" : field.field_type}
-        slotProps={
-          field.field_type === "number" ? { htmlInput: { min: 0 } } : undefined
-        }
+        slotProps={{
+          htmlInput: {
+            "aria-labelledby": fieldLabelId,
+            "aria-describedby": fieldHelperTextId,
+            ...(field.field_type === "number" ? { min: 0 } : {}),
+          },
+        }}
       />
     );
   }
@@ -252,6 +308,10 @@ export function RegistrationForm({ fields }: Props) {
     return (
       <ThemeProvider theme={formTheme}>
         <Box
+          component="section"
+          role={isErrorPage ? "alert" : "status"}
+          aria-live={isErrorPage ? "assertive" : "polite"}
+          aria-atomic="true"
           sx={{
             minHeight: "100vh",
             width: "100%",
@@ -274,6 +334,7 @@ export function RegistrationForm({ fields }: Props) {
             }}
           >
             <Box
+              aria-hidden="true"
               sx={{
                 width: 72,
                 height: 72,
@@ -298,11 +359,11 @@ export function RegistrationForm({ fields }: Props) {
                 ? "Errore durante l'iscrizione"
                 : "Iscrizione avvenuta con successo"}
             </Typography>
-            <Typography sx={{ color: "#3e555f", fontSize: { xs: 16, md: 18 } }}>
+            <Typography sx={{ color: "#2f4450", fontSize: { xs: 16, md: 18 } }}>
               {result.message}
             </Typography>
             {result.status && !isErrorPage && (
-              <Typography sx={{ mt: 1.5, color: "#4d5e66", fontSize: 14 }}>
+              <Typography sx={{ mt: 1.5, color: "#334955", fontSize: 14 }}>
                 Stato registrazione:{" "}
                 {result.status === "confirmed"
                   ? "Confermata"
@@ -320,18 +381,29 @@ export function RegistrationForm({ fields }: Props) {
       <Box
         component="form"
         onSubmit={handleSubmit}
+        aria-labelledby="registration-form-title"
+        aria-describedby="registration-form-summary registration-form-help"
+        aria-busy={isSubmitting}
+        noValidate
         sx={{ width: "100%", maxWidth: 740, mx: "auto" }}
       >
         <Paper
           elevation={0}
-          sx={{ border: "1px solid #d9dfe7", p: { xs: 2.5, md: 4 } }}
+          sx={{ border: "1px solid #b9c5d1", p: { xs: 2.5, md: 4 } }}
         >
-          <Typography variant="h4" sx={{ mb: 1 }}>
+          <Typography id="registration-form-title" variant="h4" sx={{ mb: 1 }}>
             Personal information
           </Typography>
-          <Typography sx={{ color: "#5f6c76", mb: 2.5 }}>
+          <Typography
+            id="registration-form-summary"
+            sx={{ color: "#445867", mb: 2.5 }}
+          >
             All fields marked with a (*) are required. Campi richiesti:{" "}
             {requiredCount}.
+          </Typography>
+          <Typography id="registration-form-help" sx={visuallyHiddenSx}>
+            Compila il modulo. In caso di errore, il campo verra' evidenziato e
+            verra' letto il messaggio associato.
           </Typography>
 
           <Divider sx={{ mb: 2.5 }} />
@@ -339,7 +411,7 @@ export function RegistrationForm({ fields }: Props) {
           <Typography sx={{ fontSize: 24, fontWeight: 700, mb: 0.75 }}>
             About you
           </Typography>
-          <Typography sx={{ color: "#62707c", mb: 2.5 }}>
+          <Typography sx={{ color: "#445867", mb: 2.5 }}>
             Compila i campi seguenti per completare l&apos;iscrizione.
           </Typography>
 
@@ -349,20 +421,28 @@ export function RegistrationForm({ fields }: Props) {
                 key={field.id}
                 sx={{
                   border: fieldErrors[field.key]
-                    ? "1px solid #d32f2f"
-                    : "1px solid #d7dee6",
+                    ? "1px solid #b3261e"
+                    : "1px solid #c2ccd8",
                   borderRadius: 2,
                   p: 2,
                   backgroundColor: fieldErrors[field.key]
-                    ? "#fff6f6"
+                    ? "#fff1f1"
                     : "#f8fafc",
                 }}
               >
                 <Typography
-                  sx={{ fontWeight: 700, color: "#2d3943", mb: 0.75 }}
+                  id={`${field.key}-label`}
+                  component="label"
+                  htmlFor={field.key}
+                  sx={{ fontWeight: 700, color: "#1f2d37", mb: 0.75 }}
                 >
                   {field.label}
                   {field.required ? " *" : ""}
+                  {field.required && (
+                    <Box component="span" sx={visuallyHiddenSx}>
+                      campo obbligatorio
+                    </Box>
+                  )}
                 </Typography>
                 {renderField(field)}
               </Box>
@@ -380,7 +460,7 @@ export function RegistrationForm({ fields }: Props) {
               borderTop: "1px solid #dde3ea",
             }}
           >
-            <Typography sx={{ color: "#61707b", fontSize: 14 }}>
+            <Typography sx={{ color: "#435764", fontSize: 14 }}>
               Riceverai una mail di conferma o lista d&apos;attesa.
             </Typography>
             <Button
@@ -396,10 +476,19 @@ export function RegistrationForm({ fields }: Props) {
         </Paper>
 
         {result && (
-          <Alert severity={result.ok ? "success" : "error"} sx={{ mt: 2 }}>
+          <Alert
+            severity={result.ok ? "success" : "error"}
+            role={result.ok ? "status" : "alert"}
+            aria-live={result.ok ? "polite" : "assertive"}
+            sx={{ mt: 2 }}
+          >
             {result.message}
           </Alert>
         )}
+
+        <Box aria-live="polite" sx={visuallyHiddenSx}>
+          {isSubmitting ? "Invio in corso" : ""}
+        </Box>
       </Box>
     </ThemeProvider>
   );
