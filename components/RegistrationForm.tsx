@@ -37,6 +37,21 @@ const NUMBER_KEYS = new Set([
 const VALIDATION_SUMMARY_MESSAGE =
   "Controlla i campi evidenziati in rosso e correggi gli errori.";
 
+const WALK_DETAILS = {
+  date: "24/05/26",
+  startTime: "10.00",
+  checkInWindow: "9.30 - 10.00",
+  meetingPoint: "CGP Monte di Malo",
+  duration: "2 ore circa",
+} as const;
+
+const WALK_RECOMMENDED_ITEMS = [
+  "Abbigliamento comodo e scarpe da ginnastica",
+  "Acqua",
+  "Passeggino da trekking",
+  "Un bicchiere da casa per il ristoro",
+] as const;
+
 const visuallyHiddenSx = {
   position: "absolute",
   width: "1px",
@@ -400,14 +415,14 @@ export function RegistrationForm({ fields }: Props) {
           sx={{ border: "1px solid #b9c5d1", p: { xs: 2.5, md: 4 } }}
         >
           <Typography id="registration-form-title" variant="h4" sx={{ mb: 1 }}>
-            Personal information
+            Passeggiata del 24 maggio 2026
           </Typography>
           <Typography
             id="registration-form-summary"
             sx={{ color: "#445867", mb: 2.5 }}
           >
-            All fields marked with a (*) are required. Campi richiesti:{" "}
-            {requiredCount}.
+            Modulo di iscrizione alla passeggiata itinerante per famiglie
+            prevista per il 24 maggio 2026.
           </Typography>
           <Typography id="registration-form-help" sx={visuallyHiddenSx}>
             Compila il modulo. In caso di errore, il campo verra' evidenziato e
@@ -416,8 +431,77 @@ export function RegistrationForm({ fields }: Props) {
 
           <Divider sx={{ mb: 2.5 }} />
 
+          <Box
+            sx={{
+              mb: 3,
+              p: { xs: 2, md: 2.5 },
+              borderRadius: 2,
+              border: "1px solid #c9e4e1",
+              backgroundColor: "#f4fbfa",
+            }}
+          >
+            <Typography sx={{ fontSize: 24, fontWeight: 700, mb: 0.5 }}>
+              Informazioni sulla passeggiata
+            </Typography>
+            {/* <Typography sx={{ color: "#334955", mb: 1.5 }}>
+              Prenotazione confermata per il {WALK_DETAILS.date} alle ore{" "}
+              {WALK_DETAILS.startTime}.
+            </Typography> */}
+
+            <Stack spacing={0.75} sx={{ mb: 1.5 }}>
+              <Typography>
+                <strong>Punto di ritrovo:</strong> {WALK_DETAILS.meetingPoint}
+              </Typography>
+              <Typography>
+                <strong>Durata prevista:</strong> {WALK_DETAILS.duration}
+              </Typography>
+              <Typography>
+                <strong>Iscrizioni e accoglienza:</strong> dalle ore{" "}
+                {WALK_DETAILS.checkInWindow}
+              </Typography>
+              <Typography>
+                <strong>Partenza del gruppo:</strong> ore{" "}
+                {WALK_DETAILS.startTime}
+              </Typography>
+              {/* <Typography>
+                <strong>Numero partecipanti:</strong> compilare i campi del
+                modulo qui sotto.
+              </Typography> */}
+            </Stack>
+
+            {/* <Typography sx={{ color: "#334955", mb: 0.75 }}>
+              Chiediamo puntualita': trattandosi di una passeggiata itinerante,
+              si partira' tutti insieme per garantire ai bambini il regolare
+              svolgimento dei laboratori.
+            </Typography>
+
+            <Typography sx={{ fontWeight: 700, mb: 0.5 }}>
+              Si consiglia di portare:
+            </Typography>
+            <Box
+              component="ul"
+              sx={{ pl: 2.5, mt: 0, mb: 1.5, color: "#334955" }}
+            >
+              {WALK_RECOMMENDED_ITEMS.map((item) => (
+                <Box key={item} component="li" sx={{ mb: 0.25 }}>
+                  {item}
+                </Box>
+              ))}
+            </Box>
+
+            <Typography sx={{ color: "#334955", mb: 0.5 }}>
+              Per il pranzo e' disponibile il ricco stand della Sagra di San
+              Giuseppe nel piazzale della Chiesa.
+            </Typography>
+            <Typography sx={{ color: "#334955" }}>
+              In caso di necessita' o variazioni, rispondi all&apos;email di
+              conferma per essere ricontattato dallo staff di Tra i fili
+              d&apos;erba.
+            </Typography> */}
+          </Box>
+
           <Typography sx={{ fontSize: 24, fontWeight: 700, mb: 0.75 }}>
-            About you
+            Compila il form di registrazione
           </Typography>
           <Typography sx={{ color: "#445867", mb: 2.5 }}>
             Compila i campi seguenti per completare l&apos;iscrizione.
