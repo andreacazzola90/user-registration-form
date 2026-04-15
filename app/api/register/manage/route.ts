@@ -42,7 +42,12 @@ async function getAuthorizedRegistration(
 ) {
   const tokenData = verifyRegistrationManageToken(token);
   if (!tokenData || tokenData.registrationId !== id) {
-    return { error: NextResponse.json({ message: "Link non valido o scaduto" }, { status: 401 }) };
+    return {
+      error: NextResponse.json(
+        { message: "Link non valido o scaduto" },
+        { status: 401 },
+      ),
+    };
   }
 
   const { data: registration, error } = await supabase
@@ -52,15 +57,27 @@ async function getAuthorizedRegistration(
     .maybeSingle();
 
   if (error) {
-    return { error: NextResponse.json({ message: error.message }, { status: 500 }) };
+    return {
+      error: NextResponse.json({ message: error.message }, { status: 500 }),
+    };
   }
 
   if (!registration) {
-    return { error: NextResponse.json({ message: "Prenotazione non trovata" }, { status: 404 }) };
+    return {
+      error: NextResponse.json(
+        { message: "Prenotazione non trovata" },
+        { status: 404 },
+      ),
+    };
   }
 
   if (String(registration.email).trim().toLowerCase() !== tokenData.email) {
-    return { error: NextResponse.json({ message: "Link non valido o scaduto" }, { status: 401 }) };
+    return {
+      error: NextResponse.json(
+        { message: "Link non valido o scaduto" },
+        { status: 401 },
+      ),
+    };
   }
 
   return { registration };
@@ -72,7 +89,10 @@ export async function GET(request: Request) {
   const token = searchParams.get("token") ?? "";
 
   if (!id || !token) {
-    return NextResponse.json({ message: "Parametri mancanti" }, { status: 400 });
+    return NextResponse.json(
+      { message: "Parametri mancanti" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -89,7 +109,10 @@ export async function GET(request: Request) {
       .order("sort_order", { ascending: true });
 
     if (fieldsError) {
-      return NextResponse.json({ message: fieldsError.message }, { status: 500 });
+      return NextResponse.json(
+        { message: fieldsError.message },
+        { status: 500 },
+      );
     }
 
     const row = authResult.registration;
@@ -102,7 +125,9 @@ export async function GET(request: Request) {
       children_under_3: row.children_under_3,
       children_over_3_labs: row.children_over_3_labs,
       adults: row.adults,
-      ...(typeof row.additional_data === "object" && row.additional_data ? row.additional_data : {}),
+      ...(typeof row.additional_data === "object" && row.additional_data
+        ? row.additional_data
+        : {}),
     };
 
     return NextResponse.json({
@@ -125,7 +150,11 @@ export async function PATCH(request: Request) {
     const body = managePayloadSchema.parse(await request.json());
     const supabase = createSupabaseAdminClient();
 
-    const authResult = await getAuthorizedRegistration(body.id, body.token, supabase);
+    const authResult = await getAuthorizedRegistration(
+      body.id,
+      body.token,
+      supabase,
+    );
     if (authResult.error) {
       return authResult.error;
     }
@@ -137,7 +166,10 @@ export async function PATCH(request: Request) {
       .order("sort_order", { ascending: true });
 
     if (fieldsError) {
-      return NextResponse.json({ message: fieldsError.message }, { status: 500 });
+      return NextResponse.json(
+        { message: fieldsError.message },
+        { status: 500 },
+      );
     }
 
     const activeFields = (fields ?? []) as RegistrationField[];
@@ -188,12 +220,21 @@ export async function PATCH(request: Request) {
       .eq("id", body.id);
 
     if (updateError) {
-      return NextResponse.json({ message: updateError.message }, { status: 400 });
+      return NextResponse.json(
+        { message: updateError.message },
+        { status: 400 },
+      );
     }
 
-    return NextResponse.json({ ok: true, message: "Prenotazione aggiornata con successo" });
+    return NextResponse.json({
+      ok: true,
+      message: "Prenotazione aggiornata con successo",
+    });
   } catch {
-    return NextResponse.json({ message: "Richiesta non valida" }, { status: 400 });
+    return NextResponse.json(
+      { message: "Richiesta non valida" },
+      { status: 400 },
+    );
   }
 }
 
@@ -202,12 +243,19 @@ export async function DELETE(request: Request) {
     const body = deletePayloadSchema.parse(await request.json());
     const supabase = createSupabaseAdminClient();
 
-    const authResult = await getAuthorizedRegistration(body.id, body.token, supabase);
+    const authResult = await getAuthorizedRegistration(
+      body.id,
+      body.token,
+      supabase,
+    );
     if (authResult.error) {
       return authResult.error;
     }
 
-    const { error } = await supabase.from("registrations").delete().eq("id", body.id);
+    const { error } = await supabase
+      .from("registrations")
+      .delete()
+      .eq("id", body.id);
 
     if (error) {
       return NextResponse.json({ message: error.message }, { status: 400 });
@@ -215,6 +263,9 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ ok: true, message: "Prenotazione cancellata" });
   } catch {
-    return NextResponse.json({ message: "Richiesta non valida" }, { status: 400 });
+    return NextResponse.json(
+      { message: "Richiesta non valida" },
+      { status: 400 },
+    );
   }
 }

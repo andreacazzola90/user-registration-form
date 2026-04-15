@@ -50,7 +50,10 @@ export default function ManageRegistrationPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const orderedFields = useMemo(
     () => [...fields].sort((a, b) => a.sort_order - b.sort_order),
@@ -71,11 +74,15 @@ export default function ManageRegistrationPage() {
     setRegistrationId(id);
     setToken(t);
 
-    fetch(`/api/register/manage?id=${encodeURIComponent(id)}&token=${encodeURIComponent(t)}`)
+    fetch(
+      `/api/register/manage?id=${encodeURIComponent(id)}&token=${encodeURIComponent(t)}`,
+    )
       .then(async (response) => {
         const data = (await response.json()) as LoadResponse;
         if (!response.ok || !data.ok) {
-          throw new Error(data.message || "Impossibile caricare la prenotazione");
+          throw new Error(
+            data.message || "Impossibile caricare la prenotazione",
+          );
         }
 
         setFields(data.fields.filter((field) => field.active));
@@ -83,7 +90,10 @@ export default function ManageRegistrationPage() {
         setStatus(data.registration.status);
       })
       .catch((error: unknown) => {
-        const text = error instanceof Error ? error.message : "Impossibile caricare la prenotazione";
+        const text =
+          error instanceof Error
+            ? error.message
+            : "Impossibile caricare la prenotazione";
         setMessage({ type: "error", text });
       })
       .finally(() => setIsLoading(false));
@@ -110,9 +120,15 @@ export default function ManageRegistrationPage() {
         throw new Error(data.message || "Errore durante l'aggiornamento");
       }
 
-      setMessage({ type: "success", text: data.message || "Prenotazione aggiornata" });
+      setMessage({
+        type: "success",
+        text: data.message || "Prenotazione aggiornata",
+      });
     } catch (error: unknown) {
-      const text = error instanceof Error ? error.message : "Errore durante l'aggiornamento";
+      const text =
+        error instanceof Error
+          ? error.message
+          : "Errore durante l'aggiornamento";
       setMessage({ type: "error", text });
     } finally {
       setIsSaving(false);
@@ -124,7 +140,9 @@ export default function ManageRegistrationPage() {
       return;
     }
 
-    const confirmed = window.confirm("Confermi la cancellazione della prenotazione?");
+    const confirmed = window.confirm(
+      "Confermi la cancellazione della prenotazione?",
+    );
     if (!confirmed) {
       return;
     }
@@ -144,12 +162,18 @@ export default function ManageRegistrationPage() {
         throw new Error(data.message || "Errore durante la cancellazione");
       }
 
-      setMessage({ type: "success", text: "Prenotazione cancellata con successo." });
+      setMessage({
+        type: "success",
+        text: "Prenotazione cancellata con successo.",
+      });
       setFields([]);
       setFormData({});
       setStatus("");
     } catch (error: unknown) {
-      const text = error instanceof Error ? error.message : "Errore durante la cancellazione";
+      const text =
+        error instanceof Error
+          ? error.message
+          : "Errore durante la cancellazione";
       setMessage({ type: "error", text });
     } finally {
       setIsDeleting(false);
@@ -166,8 +190,13 @@ export default function ManageRegistrationPage() {
       value,
       size: "small" as const,
       fullWidth: true,
-      onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const nextValue = field.field_type === "number" ? Number(event.target.value || 0) : event.target.value;
+      onChange: (
+        event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+      ) => {
+        const nextValue =
+          field.field_type === "number"
+            ? Number(event.target.value || 0)
+            : event.target.value;
         setFormData((prev) => ({ ...prev, [field.key]: nextValue }));
       },
       sx: {
@@ -206,8 +235,15 @@ export default function ManageRegistrationPage() {
     <ThemeProvider theme={formTheme}>
       <main className="admin-backdrop min-h-screen">
         <div className="public-shell py-8 md:py-12">
-          <Box component="form" onSubmit={handleSave} sx={{ width: "100%", maxWidth: 740, mx: "auto" }}>
-            <Paper elevation={0} sx={{ border: "1px solid #d9dfe7", p: { xs: 2.5, md: 4 } }}>
+          <Box
+            component="form"
+            onSubmit={handleSave}
+            sx={{ width: "100%", maxWidth: 740, mx: "auto" }}
+          >
+            <Paper
+              elevation={0}
+              sx={{ border: "1px solid #d9dfe7", p: { xs: 2.5, md: 4 } }}
+            >
               <Typography variant="h4" sx={{ mb: 1 }}>
                 Gestisci la tua prenotazione
               </Typography>
@@ -218,7 +254,8 @@ export default function ManageRegistrationPage() {
 
               {status && (
                 <Typography sx={{ color: "#4f616b", mb: 2 }}>
-                  Stato attuale: {status === "confirmed" ? "Confermata" : "Lista d'attesa"}
+                  Stato attuale:{" "}
+                  {status === "confirmed" ? "Confermata" : "Lista d'attesa"}
                 </Typography>
               )}
 
@@ -238,7 +275,9 @@ export default function ManageRegistrationPage() {
                         backgroundColor: "#f8fafc",
                       }}
                     >
-                      <Typography sx={{ fontWeight: 700, color: "#2d3943", mb: 0.75 }}>
+                      <Typography
+                        sx={{ fontWeight: 700, color: "#2d3943", mb: 0.75 }}
+                      >
                         {field.label}
                         {field.required ? " *" : ""}
                       </Typography>
@@ -263,7 +302,9 @@ export default function ManageRegistrationPage() {
                   color="error"
                   variant="outlined"
                   type="button"
-                  disabled={isLoading || isDeleting || orderedFields.length === 0}
+                  disabled={
+                    isLoading || isDeleting || orderedFields.length === 0
+                  }
                   onClick={handleDelete}
                 >
                   {isDeleting ? "Cancellazione..." : "Cancella prenotazione"}

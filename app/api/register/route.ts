@@ -130,10 +130,16 @@ export async function POST(request: Request) {
 
       if (registrationId) {
         try {
-          const manageToken = createRegistrationManageToken(registrationId, email);
+          const manageToken = createRegistrationManageToken(
+            registrationId,
+            email,
+          );
           links = buildManageRegistrationUrls(registrationId, manageToken);
         } catch (tokenError) {
-          console.error("Failed to create registration manage links", tokenError);
+          console.error(
+            "Failed to create registration manage links",
+            tokenError,
+          );
         }
       }
 

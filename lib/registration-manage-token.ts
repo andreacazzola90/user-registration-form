@@ -48,7 +48,9 @@ export function createRegistrationManageToken(
   return `${payloadPart}.${signaturePart}`;
 }
 
-export function verifyRegistrationManageToken(token: string): VerifiedToken | null {
+export function verifyRegistrationManageToken(
+  token: string,
+): VerifiedToken | null {
   const [payloadPart, signaturePart] = token.split(".");
   if (!payloadPart || !signaturePart) {
     return null;
@@ -67,12 +69,21 @@ export function verifyRegistrationManageToken(token: string): VerifiedToken | nu
     return null;
   }
 
-  const maxAgeDays = Number(process.env.REGISTRATION_MANAGE_TOKEN_MAX_AGE_DAYS ?? "30");
-  const maxAgeMs = (Number.isFinite(maxAgeDays) ? maxAgeDays : 30) * 24 * 60 * 60 * 1000;
+  const maxAgeDays = Number(
+    process.env.REGISTRATION_MANAGE_TOKEN_MAX_AGE_DAYS ?? "30",
+  );
+  const maxAgeMs =
+    (Number.isFinite(maxAgeDays) ? maxAgeDays : 30) * 24 * 60 * 60 * 1000;
 
   try {
-    const payload = JSON.parse(fromBase64Url(payloadPart)) as ManageTokenPayload;
-    if (!payload.registrationId || !payload.email || typeof payload.iat !== "number") {
+    const payload = JSON.parse(
+      fromBase64Url(payloadPart),
+    ) as ManageTokenPayload;
+    if (
+      !payload.registrationId ||
+      !payload.email ||
+      typeof payload.iat !== "number"
+    ) {
       return null;
     }
 
@@ -89,7 +100,10 @@ export function verifyRegistrationManageToken(token: string): VerifiedToken | nu
   }
 }
 
-export function buildManageRegistrationUrls(registrationId: string, token: string) {
+export function buildManageRegistrationUrls(
+  registrationId: string,
+  token: string,
+) {
   const appBaseUrl = process.env.APP_BASE_URL?.trim();
   if (!appBaseUrl) {
     return null;
