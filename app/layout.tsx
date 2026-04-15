@@ -27,10 +27,9 @@ export default function RootLayout({
   return (
     <html lang="it" data-theme="hillwalk">
       <body
-        className={`${sans.variable} ${serif.variable} font-[var(--font-sans)]`}
+        className={`${sans.variable} ${serif.variable} font-[var(--font-sans)] m-0`}
       >
         {children}
-        <ThemeFloatingMenu />
       </body>
     </html>
   );

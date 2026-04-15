@@ -10,6 +10,8 @@ type RegistrationEmailPayload = {
   fullName: string;
   status: "confirmed" | "waitlist";
   recapFields: RecapField[];
+  manageUrl?: string;
+  cancelUrl?: string;
 };
 
 type SmtpConfig = {
@@ -71,6 +73,8 @@ function buildHtmlBody(
   fullName: string,
   status: "confirmed" | "waitlist",
   recapFields: RecapField[],
+  manageUrl?: string,
+  cancelUrl?: string,
 ) {
   const statusText =
     status === "confirmed"
@@ -84,12 +88,22 @@ function buildHtmlBody(
     )
     .join("");
 
+  const linksSection =
+    manageUrl && cancelUrl
+      ? `<p style="margin:16px 0 0;">Puoi gestire la tua prenotazione dai seguenti link:</p>
+      <ul style="margin:8px 0 0 18px;padding:0;">
+        <li><a href="${escapeHtml(manageUrl)}">Modifica prenotazione</a></li>
+        <li><a href="${escapeHtml(cancelUrl)}">Cancella prenotazione</a></li>
+      </ul>`
+      : "";
+
   return `
     <div style="font-family:Arial,sans-serif;line-height:1.45;color:#1f2f35;max-width:680px;margin:0 auto;">
       <h2 style="margin:0 0 8px;">Grazie per la tua iscrizione</h2>
       <p style="margin:0 0 16px;">Ciao ${escapeHtml(fullName)}, ${statusText}</p>
       <p style="margin:0 0 12px;">Di seguito trovi il riepilogo dei dati inseriti:</p>
       <table style="width:100%;border-collapse:collapse;background:#fff;">${rows}</table>
+      ${linksSection}
       <p style="margin:16px 0 0;">Ti contatteremo in caso di aggiornamenti.</p>
     </div>
   `;
@@ -99,6 +113,8 @@ function buildTextBody(
   fullName: string,
   status: "confirmed" | "waitlist",
   recapFields: RecapField[],
+  manageUrl?: string,
+  cancelUrl?: string,
 ) {
   const statusText =
     status === "confirmed"
@@ -109,6 +125,16 @@ function buildTextBody(
     .map((field) => `- ${field.label}: ${field.value}`)
     .join("\n");
 
+  const links =
+    manageUrl && cancelUrl
+      ? [
+          "",
+          "Gestione prenotazione:",
+          `- Modifica: ${manageUrl}`,
+          `- Cancella: ${cancelUrl}`,
+        ]
+      : [];
+
   return [
     `Ciao ${fullName},`,
     "",
@@ -117,6 +143,7 @@ function buildTextBody(
     "",
     "Riepilogo dati inseriti:",
     rows,
+    ...links,
   ].join("\n");
 }
 
@@ -142,8 +169,20 @@ export async function sendRegistrationRecapEmail(
     from: `${config.fromName} <${config.fromEmail}>`,
     to: payload.to,
     subject: "Grazie per la tua iscrizione - riepilogo dati",
-    html: buildHtmlBody(payload.fullName, payload.status, payload.recapFields),
-    text: buildTextBody(payload.fullName, payload.status, payload.recapFields),
+    html: buildHtmlBody(
+      payload.fullName,
+      payload.status,
+      payload.recapFields,
+      payload.manageUrl,
+      payload.cancelUrl,
+    ),
+    text: buildTextBody(
+      payload.fullName,
+      payload.status,
+      payload.recapFields,
+      payload.manageUrl,
+      payload.cancelUrl,
+    ),
   });
 
   return true;
