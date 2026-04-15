@@ -25,6 +25,7 @@ type SubmitResult = {
   ok: boolean;
   status?: RegistrationStatus;
   message: string;
+  fullPage?: boolean;
 };
 
 const NUMBER_KEYS = new Set([
@@ -157,7 +158,11 @@ export function RegistrationForm({ fields }: Props) {
       setFormData({});
       setFieldErrors({});
     } catch {
-      setResult({ ok: false, message: "Errore inatteso. Riprova tra poco." });
+      setResult({
+        ok: false,
+        fullPage: true,
+        message: "Errore inatteso. Riprova tra poco.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -238,6 +243,75 @@ export function RegistrationForm({ fields }: Props) {
           field.field_type === "number" ? { htmlInput: { min: 0 } } : undefined
         }
       />
+    );
+  }
+
+  if (result?.ok || result?.fullPage) {
+    const isErrorPage = !result.ok;
+
+    return (
+      <ThemeProvider theme={formTheme}>
+        <Box
+          sx={{
+            minHeight: "100vh",
+            width: "100%",
+            display: "grid",
+            placeItems: "center",
+            px: 2,
+            py: 4,
+          }}
+        >
+          <Paper
+            elevation={0}
+            sx={{
+              width: "100%",
+              maxWidth: 760,
+              border: isErrorPage ? "1px solid #ffd6d6" : "1px solid #cdeee9",
+              borderRadius: 3,
+              p: { xs: 3, md: 6 },
+              textAlign: "center",
+              backgroundColor: isErrorPage ? "#fff8f8" : "#f3fffd",
+            }}
+          >
+            <Box
+              sx={{
+                width: 72,
+                height: 72,
+                borderRadius: "50%",
+                backgroundColor: isErrorPage ? "#d32f2f" : "#0f8a84",
+                color: "#fff",
+                display: "grid",
+                placeItems: "center",
+                fontSize: 22,
+                fontWeight: 700,
+                mx: "auto",
+                mb: 1.5,
+              }}
+            >
+              OK
+            </Box>
+            <Typography
+              variant="h4"
+              sx={{ mb: 1, color: "#1f2f35", fontSize: { xs: 30, md: 42 } }}
+            >
+              {isErrorPage
+                ? "Errore durante l'iscrizione"
+                : "Iscrizione avvenuta con successo"}
+            </Typography>
+            <Typography sx={{ color: "#3e555f", fontSize: { xs: 16, md: 18 } }}>
+              {result.message}
+            </Typography>
+            {result.status && !isErrorPage && (
+              <Typography sx={{ mt: 1.5, color: "#4d5e66", fontSize: 14 }}>
+                Stato registrazione:{" "}
+                {result.status === "confirmed"
+                  ? "Confermata"
+                  : "Lista d'attesa"}
+              </Typography>
+            )}
+          </Paper>
+        </Box>
+      </ThemeProvider>
     );
   }
 
