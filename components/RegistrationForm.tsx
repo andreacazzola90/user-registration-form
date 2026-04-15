@@ -47,6 +47,7 @@ const formTheme = createTheme({
 
 export function RegistrationForm({ fields }: Props) {
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
 
@@ -57,9 +58,69 @@ export function RegistrationForm({ fields }: Props) {
 
   const requiredCount = orderedFields.filter((field) => field.required).length;
 
+  function validateField(field: RegistrationField, rawValue: string) {
+    const value = rawValue.trim();
+
+    if (field.required && !value) {
+      return "Questo campo e' obbligatorio.";
+    }
+
+    if (!value) {
+      return "";
+    }
+
+    if (field.field_type === "email") {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+      if (!emailPattern.test(value)) {
+        return "Inserisci un indirizzo email valido (es. nome@dominio.it).";
+      }
+    }
+
+    if (field.field_type === "tel") {
+      const digitsOnly = value.replace(/\D/g, "");
+      const phonePattern = /^\+?[0-9()\-\s.]+$/;
+
+      if (
+        !phonePattern.test(value) ||
+        digitsOnly.length < 7 ||
+        digitsOnly.length > 15
+      ) {
+        return "Inserisci un numero di telefono valido (7-15 cifre).";
+      }
+    }
+
+    return "";
+  }
+
+  function validateForm() {
+    const nextErrors: Record<string, string> = {};
+
+    orderedFields.forEach((field) => {
+      const value = formData[field.key] ?? "";
+      const errorMessage = validateField(field, value);
+
+      if (errorMessage) {
+        nextErrors[field.key] = errorMessage;
+      }
+    });
+
+    setFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setResult(null);
+
+    if (!validateForm()) {
+      setResult({
+        ok: false,
+        message:
+          "Controlla i campi evidenziati in rosso e correggi gli errori.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -94,6 +155,7 @@ export function RegistrationForm({ fields }: Props) {
         message: data.message,
       });
       setFormData({});
+      setFieldErrors({});
     } catch {
       setResult({ ok: false, message: "Errore inatteso. Riprova tra poco." });
     } finally {
@@ -103,22 +165,54 @@ export function RegistrationForm({ fields }: Props) {
 
   function renderField(field: RegistrationField) {
     const value = formData[field.key] ?? "";
+    const errorMessage = fieldErrors[field.key] ?? "";
+    const hasError = Boolean(errorMessage);
 
     const commonProps = {
       id: field.key,
       name: field.key,
       required: field.required,
       value,
+      error: hasError,
+      helperText: errorMessage || " ",
       size: "small" as const,
       fullWidth: true,
       onChange: (
         event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-      ) =>
-        setFormData((prev) => ({ ...prev, [field.key]: event.target.value })),
+      ) => {
+        const nextValue = event.target.value;
+
+        setFormData((prev) => ({ ...prev, [field.key]: nextValue }));
+
+        setFieldErrors((prev) => {
+          if (!prev[field.key]) {
+            return prev;
+          }
+
+          const nextError = validateField(field, nextValue);
+          if (nextError) {
+            return { ...prev, [field.key]: nextError };
+          }
+
+          const { [field.key]: _removed, ...rest } = prev;
+          return rest;
+        });
+      },
+      onBlur: () => {
+        const nextError = validateField(field, value);
+        setFieldErrors((prev) => ({
+          ...prev,
+          [field.key]: nextError,
+        }));
+      },
       sx: {
         mt: 0.5,
         "& .MuiOutlinedInput-root": {
           backgroundColor: "#fff",
+        },
+        "& .MuiFormHelperText-root": {
+          mt: 0.75,
+          fontSize: 12,
         },
       },
     };
@@ -180,10 +274,14 @@ export function RegistrationForm({ fields }: Props) {
               <Box
                 key={field.id}
                 sx={{
-                  border: "1px solid #d7dee6",
+                  border: fieldErrors[field.key]
+                    ? "1px solid #d32f2f"
+                    : "1px solid #d7dee6",
                   borderRadius: 2,
                   p: 2,
-                  backgroundColor: "#f8fafc",
+                  backgroundColor: fieldErrors[field.key]
+                    ? "#fff6f6"
+                    : "#f8fafc",
                 }}
               >
                 <Typography
