@@ -19,6 +19,7 @@ import type { RegistrationField, RegistrationStatus } from "@/lib/types";
 
 type Props = {
   fields: RegistrationField[];
+  labCapacityReached?: boolean;
 };
 
 type SubmitResult = {
@@ -77,7 +78,10 @@ const formTheme = createTheme({
   },
 });
 
-export function RegistrationForm({ fields }: Props) {
+export function RegistrationForm({
+  fields,
+  labCapacityReached = false,
+}: Props) {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -506,6 +510,14 @@ export function RegistrationForm({ fields }: Props) {
           <Typography sx={{ color: "#445867", mb: 2.5 }}>
             Compila i campi seguenti per completare l&apos;iscrizione.
           </Typography>
+
+          {labCapacityReached && (
+            <Alert severity="warning" sx={{ mb: 2.5 }}>
+              Per il laboratorio e&apos; stato raggiunto il numero massimo di
+              partecipanti. Le nuove iscrizioni verranno inserite in lista
+              d&apos;attesa.
+            </Alert>
+          )}
 
           <Stack spacing={2.25}>
             {orderedFields.map((field) => (
