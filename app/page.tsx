@@ -34,7 +34,7 @@ export default async function HomePage() {
 
   return (
     <main className="admin-backdrop min-h-screen">
-      <div className="public-shell py-8 md:py-12">
+      <div className="public-shell pt-8 pb-2 md:pt-12 md:pb-3">
         <h1 className="sr-only">Modulo pubblico di iscrizione evento</h1>
         <RegistrationForm fields={fields.filter((field) => field.active)} />
       </div>

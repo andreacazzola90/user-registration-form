@@ -34,14 +34,18 @@ const NUMBER_KEYS = new Set([
   "adults",
 ]);
 
+const VALIDATION_SUMMARY_MESSAGE =
+  "Controlla i campi evidenziati in rosso e correggi gli errori.";
+
 const visuallyHiddenSx = {
   position: "absolute",
-  width: 1,
-  height: 1,
+  width: "1px",
+  height: "1px",
   p: 0,
-  m: -1,
+  m: "-1px",
   overflow: "hidden",
   clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
   whiteSpace: "nowrap",
   border: 0,
 } as const;
@@ -148,8 +152,7 @@ export function RegistrationForm({ fields }: Props) {
     if (!validateForm()) {
       setResult({
         ok: false,
-        message:
-          "Controlla i campi evidenziati in rosso e correggi gli errori.",
+        message: VALIDATION_SUMMARY_MESSAGE,
       });
       return;
     }
@@ -213,12 +216,7 @@ export function RegistrationForm({ fields }: Props) {
       required: field.required,
       value,
       error: hasError,
-      helperText: errorMessage || " ",
-      FormHelperTextProps: {
-        id: fieldHelperTextId,
-        role: hasError ? ("alert" as const) : undefined,
-        "aria-live": hasError ? ("assertive" as const) : undefined,
-      },
+      helperText: errorMessage || undefined,
       size: "small" as const,
       fullWidth: true,
       onChange: (
@@ -271,9 +269,14 @@ export function RegistrationForm({ fields }: Props) {
           {...commonProps}
           select
           slotProps={{
+            formHelperText: {
+              id: fieldHelperTextId,
+              role: hasError ? ("alert" as const) : undefined,
+              "aria-live": hasError ? ("assertive" as const) : undefined,
+            },
             htmlInput: {
               "aria-labelledby": fieldLabelId,
-              "aria-describedby": fieldHelperTextId,
+              ...(hasError ? { "aria-describedby": fieldHelperTextId } : {}),
             },
           }}
         >
@@ -292,9 +295,14 @@ export function RegistrationForm({ fields }: Props) {
         {...commonProps}
         type={field.field_type === "number" ? "number" : field.field_type}
         slotProps={{
+          formHelperText: {
+            id: fieldHelperTextId,
+            role: hasError ? ("alert" as const) : undefined,
+            "aria-live": hasError ? ("assertive" as const) : undefined,
+          },
           htmlInput: {
             "aria-labelledby": fieldLabelId,
-            "aria-describedby": fieldHelperTextId,
+            ...(hasError ? { "aria-describedby": fieldHelperTextId } : {}),
             ...(field.field_type === "number" ? { min: 0 } : {}),
           },
         }}
@@ -449,6 +457,19 @@ export function RegistrationForm({ fields }: Props) {
             ))}
           </Stack>
 
+          {result?.ok === false &&
+            !result.fullPage &&
+            result.message === VALIDATION_SUMMARY_MESSAGE && (
+              <Alert
+                severity="error"
+                role="alert"
+                aria-live="assertive"
+                sx={{ mt: 3, mb: 2 }}
+              >
+                {result.message}
+              </Alert>
+            )}
+
           <Stack
             direction={{ xs: "column", md: "row" }}
             spacing={1.5}
@@ -475,7 +496,7 @@ export function RegistrationForm({ fields }: Props) {
           </Stack>
         </Paper>
 
-        {result && (
+        {result && result.message !== VALIDATION_SUMMARY_MESSAGE && (
           <Alert
             severity={result.ok ? "success" : "error"}
             role={result.ok ? "status" : "alert"}
