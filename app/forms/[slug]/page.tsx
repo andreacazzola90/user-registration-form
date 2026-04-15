@@ -1,3 +1,4 @@
+import { PublicFormSlider } from "@/components/PublicFormSlider";
 import { RegistrationForm } from "@/components/RegistrationForm";
 import { getPublicFormBySlug } from "@/lib/public-forms";
 import { getPublicRegistrationFields } from "@/lib/public-registration-fields";
@@ -20,11 +21,20 @@ export default async function PublicFormPage({ params }: Props) {
   const fields = await getPublicRegistrationFields();
 
   return (
-    <main className="admin-backdrop min-h-screen">
-      <div className="public-shell pt-8 pb-2 md:pt-12 md:pb-3">
-        <h1 className="sr-only">{`Modulo pubblico: ${form.title}`}</h1>
-        <RegistrationForm fields={fields.filter((field) => field.active)} />
-      </div>
+    <main className="public-form-layout">
+      <section
+        className="public-form-slider-pane"
+        aria-label="Anteprima evento"
+      >
+        <PublicFormSlider />
+      </section>
+
+      <section className="public-form-content-pane">
+        <div className="public-form-content-inner">
+          <h1 className="sr-only">{`Modulo pubblico: ${form.title}`}</h1>
+          <RegistrationForm fields={fields.filter((field) => field.active)} />
+        </div>
+      </section>
     </main>
   );
 }
