@@ -143,7 +143,11 @@ export async function POST(request: Request) {
             registrationId,
             email,
           );
-          links = buildManageRegistrationUrls(registrationId, manageToken);
+          links = buildManageRegistrationUrls(
+            registrationId,
+            manageToken,
+            request.url ? new URL(request.url).origin : undefined,
+          );
         } catch (tokenError) {
           console.error(
             "Failed to create registration manage links",

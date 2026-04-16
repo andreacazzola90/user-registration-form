@@ -103,13 +103,23 @@ export function verifyRegistrationManageToken(
 export function buildManageRegistrationUrls(
   registrationId: string,
   token: string,
+  baseUrl?: string,
 ) {
-  const appBaseUrl = process.env.APP_BASE_URL?.trim();
+  const appBaseUrl =
+    baseUrl?.trim() ||
+    process.env.APP_BASE_URL?.trim() ||
+    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+    process.env.VERCEL_URL?.trim();
+
   if (!appBaseUrl) {
     return null;
   }
 
-  const safeBase = appBaseUrl.replace(/\/$/, "");
+  const normalizedBase = appBaseUrl.startsWith("http")
+    ? appBaseUrl
+    : `https://${appBaseUrl}`;
+
+  const safeBase = normalizedBase.replace(/\/$/, "");
   const query = `id=${encodeURIComponent(registrationId)}&token=${encodeURIComponent(token)}`;
   const manageUrl = `${safeBase}/manage-registration?${query}`;
   const cancelUrl = `${safeBase}/manage-registration?${query}&mode=delete`;
