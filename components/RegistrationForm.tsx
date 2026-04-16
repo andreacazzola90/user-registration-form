@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import DOMPurify from "isomorphic-dompurify";
 import {
@@ -96,6 +96,7 @@ export function RegistrationForm({
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitInFlightRef = useRef(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [toastError, setToastError] = useState<string | null>(null);
 
@@ -183,6 +184,12 @@ export function RegistrationForm({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (submitInFlightRef.current) {
+      return;
+    }
+
+    submitInFlightRef.current = true;
     setResult(null);
 
     if (!validateForm()) {
@@ -190,6 +197,7 @@ export function RegistrationForm({
         ok: false,
         message: VALIDATION_SUMMARY_MESSAGE,
       });
+      submitInFlightRef.current = false;
       return;
     }
 
@@ -229,6 +237,7 @@ export function RegistrationForm({
       setToastError("Errore inatteso. Riprova tra poco.");
     } finally {
       setIsSubmitting(false);
+      submitInFlightRef.current = false;
     }
   }
 

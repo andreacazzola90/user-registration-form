@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { createHash } from "node:crypto";
 
 export type RecapField = {
   label: string;
@@ -23,6 +24,47 @@ type SmtpConfig = {
   fromEmail: string;
   fromName: string;
 };
+
+const RECENT_SEND_WINDOW_MS = 30_000;
+const recentSendCache = new Map<string, number>();
+
+function buildSendFingerprint(payload: RegistrationEmailPayload) {
+  return createHash("sha256")
+    .update(
+      JSON.stringify({
+        to: payload.to.trim().toLowerCase(),
+        fullName: payload.fullName.trim(),
+        status: payload.status,
+        recapFields: payload.recapFields,
+        manageUrl: payload.manageUrl ?? "",
+        cancelUrl: payload.cancelUrl ?? "",
+      }),
+    )
+    .digest("hex");
+}
+
+function isDuplicateRecentSend(fingerprint: string) {
+  const now = Date.now();
+
+  for (const [key, timestamp] of recentSendCache.entries()) {
+    if (now - timestamp > RECENT_SEND_WINDOW_MS) {
+      recentSendCache.delete(key);
+    }
+  }
+
+  const previous = recentSendCache.get(fingerprint);
+  if (!previous) {
+    recentSendCache.set(fingerprint, now);
+    return false;
+  }
+
+  if (now - previous <= RECENT_SEND_WINDOW_MS) {
+    return true;
+  }
+
+  recentSendCache.set(fingerprint, now);
+  return false;
+}
 
 function parseSecure(value: string | undefined, fallback: boolean) {
   if (!value) {
@@ -114,14 +156,21 @@ function buildHtmlBody(
     )
     .join("");
 
-  const linksSection =
-    manageUrl && cancelUrl
-      ? `<p style="margin:16px 0 0;">Puoi gestire la tua prenotazione dai seguenti link:</p>
-      <ul style="margin:8px 0 0 18px;padding:0;">
-        <li><a href="${escapeHtml(manageUrl)}">Modifica prenotazione</a></li>
-        <li><a href="${escapeHtml(cancelUrl)}">Cancella prenotazione</a></li>
-      </ul>`
-      : "";
+  const linkItems = [
+    manageUrl
+      ? `<li><a href="${escapeHtml(manageUrl)}">Modifica prenotazione</a></li>`
+      : "",
+    cancelUrl
+      ? `<li><a href="${escapeHtml(cancelUrl)}">Cancella prenotazione</a></li>`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
+  const linksSection = linkItems
+    ? `<p style="margin:16px 0 0;">Puoi gestire la tua prenotazione dai seguenti link:</p>
+      <ul style="margin:8px 0 0 18px;padding:0;">${linkItems}</ul>`
+    : "";
 
   return `
     <div style="font-family:Arial,sans-serif;line-height:1.45;color:#1f2f35;max-width:680px;margin:0 auto;">
@@ -155,76 +204,16 @@ function buildHtmlBody(
   `;
 }
 
-function buildTextBody(
-  fullName: string,
-  status: "confirmed" | "waitlist",
-  recapFields: RecapField[],
-  manageUrl?: string,
-  cancelUrl?: string,
-) {
-  const participantsCount = getParticipantsCount(recapFields);
-  const participantsText =
-    participantsCount > 0 ? String(participantsCount) : "Non specificato";
-  const contactEmail =
-    process.env.CONTACT_EMAIL?.trim() ||
-    process.env.SMTP_FROM_EMAIL?.trim() ||
-    "";
-
-  const statusParagraph =
-    status === "confirmed"
-      ? "la presente per confermare la Sua prenotazione per la passeggiata prevista in data 24/05/26 alle ore 10.00."
-      : "la presente per confermare la ricezione della Sua prenotazione. Al momento la richiesta risulta in lista d'attesa e Le comunicheremo tempestivamente eventuali aggiornamenti.";
-
-  const rows = recapFields
-    .map((field) => `- ${field.label}: ${field.value}`)
-    .join("\n");
-
-  const links =
-    manageUrl && cancelUrl
-      ? [
-          "",
-          "Gestione prenotazione:",
-          `- Modifica: ${manageUrl}`,
-          `- Cancella: ${cancelUrl}`,
-        ]
-      : [];
-
-  return [
-    `Gentile ${fullName || "Cliente"},`,
-    "",
-    statusParagraph,
-    "",
-    "Punto di ritrovo: CGP Monte di Malo",
-    "Durata prevista: 2 ore circa",
-    `Numero partecipanti: ${participantsText}`,
-    "",
-    "Le iscrizioni saranno aperte dalle 9.30 alle 10.00.",
-    "Chiediamo di essere puntuali in quanto, trattandosi di una passeggiata itinerante, si partira tutti insieme alle ore 10.00 per poter garantire ai bambini il regolare svolgimento dei laboratori.",
-    "",
-    "Si consiglia di venire muniti di:",
-    "- abbigliamento comodo e scarpe da ginnastica",
-    "- acqua",
-    "- passeggino da trekking",
-    "- consigliamo di portare un bicchiere da casa per il ristoro",
-    "",
-    "Con l'occasione ricordiamo che per il pranzo vi e la possibilita di usufruire del ricco Stand della Sagra di San Giuseppe che si terra nel piazzale della Chiesa.",
-    `In caso di necessita o variazioni, non esiti a contattarci alla mail: ${contactEmail || "[inserire email contatto]"}`,
-    "",
-    "Riepilogo dati inseriti:",
-    rows,
-    ...links,
-    "",
-    "Restiamo a disposizione per qualsiasi informazione e Le auguriamo una piacevole esperienza!",
-    "",
-    "Cordiali saluti,",
-    'Lo Staff di "Tra i fili d\'erba"',
-  ].join("\n");
-}
-
 export async function sendRegistrationRecapEmail(
   payload: RegistrationEmailPayload,
 ) {
   console.log("[SMTP] sendRegistrationRecapEmail called for:", payload.to);
+
+  const fingerprint = buildSendFingerprint(payload);
+  if (isDuplicateRecentSend(fingerprint)) {
+    console.warn("[SMTP] Duplicate email send suppressed for:", payload.to);
+    return true;
+  }
 
   const config = getSmtpConfig();
   if (!config) {
@@ -264,13 +253,6 @@ export async function sendRegistrationRecapEmail(
         ? "Conferma prenotazione passeggiata 24/05/26"
         : "Prenotazione ricevuta - lista d'attesa passeggiata 24/05/26",
     html: buildHtmlBody(
-      payload.fullName,
-      payload.status,
-      payload.recapFields,
-      payload.manageUrl,
-      payload.cancelUrl,
-    ),
-    text: buildTextBody(
       payload.fullName,
       payload.status,
       payload.recapFields,
