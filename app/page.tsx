@@ -1,9 +1,10 @@
-import { PUBLIC_FORMS } from "@/lib/public-forms";
+import { getAllPublicForms } from "@/lib/public-forms";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  const publicForms = await getAllPublicForms();
   return (
     <main className="admin-backdrop min-h-screen">
       <div className="public-shell py-8 md:py-12">
@@ -16,7 +17,7 @@ export default async function HomePage() {
           </p>
 
           <ul className="mt-6 grid gap-4">
-            {PUBLIC_FORMS.map((form) => (
+            {publicForms.map((form) => (
               <li key={form.slug}>
                 <Link
                   href={`/forms/${form.slug}`}

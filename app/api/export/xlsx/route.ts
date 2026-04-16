@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -12,10 +12,19 @@ export async function GET() {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const { data, error } = await supabase
+  const { searchParams } = new URL(request.url);
+  const formId = searchParams.get("form_id");
+
+  let query = supabase
     .from("registrations")
     .select("*")
     .order("created_at", { ascending: false });
+
+  if (formId) {
+    query = query.eq("form_id", formId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

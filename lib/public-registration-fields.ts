@@ -2,14 +2,15 @@ import { DEFAULT_REGISTRATION_FIELDS } from "@/lib/default-fields";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { RegistrationField } from "@/lib/types";
 
-export async function getPublicRegistrationFields(): Promise<
-  RegistrationField[]
-> {
+export async function getPublicRegistrationFields(
+  formId: string,
+): Promise<RegistrationField[]> {
   try {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase
       .from("registration_fields")
       .select("*")
+      .eq("form_id", formId)
       .order("sort_order", { ascending: true });
 
     if (error || !data?.length) {

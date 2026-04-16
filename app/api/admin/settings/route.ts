@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const updateSettingsSchema = z.object({
+  form_id: z.string().uuid(),
   lab_capacity: z.number().int().positive(),
 });
 
@@ -28,6 +29,7 @@ export async function PUT(request: Request) {
     const { data: settingsRow, error: settingsReadError } = await supabase
       .from("event_settings")
       .select("id")
+      .eq("form_id", body.form_id)
       .order("id", { ascending: true })
       .limit(1)
       .maybeSingle();
@@ -43,6 +45,7 @@ export async function PUT(request: Request) {
       const { error: insertError } = await supabase
         .from("event_settings")
         .insert({
+          form_id: body.form_id,
           lab_capacity: body.lab_capacity,
         });
 

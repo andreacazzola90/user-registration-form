@@ -2,20 +2,34 @@
 
 import { useMemo, useState } from "react";
 import { AdminFieldManager } from "@/components/AdminFieldManager";
+import { AdminFormContentManager } from "@/components/AdminFormContentManager";
+import AdminSliderManager from "@/components/AdminSliderManager";
 import { AdminRegistrationsTable } from "@/components/AdminRegistrationsTable";
 import { AdminRulesManager } from "@/components/AdminRulesManager";
-import type { RegistrationField, RegistrationRecord } from "@/lib/types";
+import type {
+  FormConfig,
+  RegistrationField,
+  RegistrationRecord,
+} from "@/lib/types";
 import { Box, Tabs, Tab, Paper, Stack, Typography, Chip } from "@mui/material";
 
 type Props = {
+  formId: string;
+  form: FormConfig;
   fields: RegistrationField[];
   registrations: RegistrationRecord[];
   capacity: number;
 };
 
-type TabKey = "participants" | "fields" | "rules";
+type TabKey = "participants" | "fields" | "contents" | "slides" | "rules";
 
-export function AdminDashboardTabs({ fields, registrations, capacity }: Props) {
+export function AdminDashboardTabs({
+  formId,
+  form,
+  fields,
+  registrations,
+  capacity,
+}: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>("participants");
   const waitlistCount = registrations.filter(
     (registration) => registration.status === "waitlist",
@@ -30,12 +44,27 @@ export function AdminDashboardTabs({ fields, registrations, capacity }: Props) {
       },
       { key: "fields" as const, label: "Campi", meta: `${fields.length}` },
       {
+        key: "contents" as const,
+        label: "Contenuti",
+        meta: "testi",
+      },
+      {
+        key: "slides" as const,
+        label: "Slide",
+        meta: `${form.slider_data?.length || 0}`,
+      },
+      {
         key: "rules" as const,
         label: "Regole",
         meta: waitlistCount > 0 ? `${waitlistCount} attesa` : "ok",
       },
     ],
-    [fields.length, registrations.length, waitlistCount],
+    [
+      fields.length,
+      registrations.length,
+      waitlistCount,
+      form.slider_data?.length,
+    ],
   );
 
   return (
@@ -137,10 +166,26 @@ export function AdminDashboardTabs({ fields, registrations, capacity }: Props) {
           />
         )}
 
-        {activeTab === "fields" && <AdminFieldManager initialFields={fields} />}
+        {activeTab === "fields" && (
+          <AdminFieldManager formId={formId} initialFields={fields} />
+        )}
+
+        {activeTab === "contents" && <AdminFormContentManager form={form} />}
+
+        {activeTab === "slides" && (
+          <AdminSliderManager
+            formId={formId}
+            form={form}
+            onUpdate={(updatedForm) => {
+              // UI automatically updated through state
+              console.log("Slides updated:", updatedForm);
+            }}
+          />
+        )}
 
         {activeTab === "rules" && (
           <AdminRulesManager
+            formId={formId}
             initialLabCapacity={capacity}
             confirmedLabChildren={registrations
               .filter((registration) => registration.status === "confirmed")

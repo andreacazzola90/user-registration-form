@@ -15,11 +15,13 @@ import {
 import SaveIcon from "@mui/icons-material/Save";
 
 type Props = {
+  formId: string;
   initialLabCapacity: number;
   confirmedLabChildren: number;
 };
 
 export function AdminRulesManager({
+  formId,
   initialLabCapacity,
   confirmedLabChildren,
 }: Props) {
@@ -36,7 +38,10 @@ export function AdminRulesManager({
       const response = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lab_capacity: Number(labCapacity) }),
+        body: JSON.stringify({
+          form_id: formId,
+          lab_capacity: Number(labCapacity),
+        }),
       });
 
       const data = (await response.json()) as { message: string };

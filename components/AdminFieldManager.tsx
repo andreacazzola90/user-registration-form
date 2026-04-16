@@ -17,6 +17,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 
 type Props = {
+  formId: string;
   initialFields: RegistrationField[];
 };
 
@@ -28,7 +29,7 @@ const TYPES: RegistrationField["field_type"][] = [
   "select",
 ];
 
-export function AdminFieldManager({ initialFields }: Props) {
+export function AdminFieldManager({ formId, initialFields }: Props) {
   const [fields, setFields] = useState(initialFields);
   const [status, setStatus] = useState<string | null>(null);
 
@@ -55,7 +56,7 @@ export function AdminFieldManager({ initialFields }: Props) {
     const response = await fetch("/api/admin/fields", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key, label }),
+      body: JSON.stringify({ key, label, form_id: formId }),
     });
 
     const data = (await response.json()) as {
@@ -68,6 +69,30 @@ export function AdminFieldManager({ initialFields }: Props) {
       setFields((prev) =>
         [...prev, createdField].sort((a, b) => a.sort_order - b.sort_order),
       );
+    }
+
+    setStatus(data.message);
+  }
+
+  async function deleteField(fieldId: string, fieldLabel: string) {
+    if (
+      !window.confirm(`Sicuro di voler eliminare il campo "${fieldLabel}"?`)
+    ) {
+      return;
+    }
+
+    setStatus(null);
+    const response = await fetch(
+      `/api/admin/fields?id=${fieldId}&form_id=${formId}`,
+      {
+        method: "DELETE",
+      },
+    );
+
+    const data = (await response.json()) as { message: string };
+
+    if (response.ok) {
+      setFields((prev) => prev.filter((f) => f.id !== fieldId));
     }
 
     setStatus(data.message);
@@ -243,6 +268,18 @@ export function AdminFieldManager({ initialFields }: Props) {
                     }}
                   >
                     Salva
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => deleteField(field.id, field.label)}
+                    sx={{
+                      textTransform: "none",
+                      fontWeight: 600,
+                      ml: 1,
+                    }}
+                  >
+                    Elimina
                   </Button>
                 </Box>
               </Stack>
