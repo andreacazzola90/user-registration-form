@@ -6,9 +6,11 @@ import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   Divider,
   MenuItem,
   Paper,
+  Snackbar,
   Stack,
   TextField,
   ThemeProvider,
@@ -86,6 +88,7 @@ export function RegistrationForm({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
+  const [toastError, setToastError] = useState<string | null>(null);
 
   const orderedFields = useMemo(
     () => [...fields].sort((a, b) => a.sort_order - b.sort_order),
@@ -197,10 +200,7 @@ export function RegistrationForm({
       const data = (await response.json()) as SubmitResult;
 
       if (!response.ok) {
-        setResult({
-          ok: false,
-          message: data.message || "Errore durante la registrazione",
-        });
+        setToastError(data.message || "Errore durante la registrazione");
         return;
       }
 
@@ -212,11 +212,7 @@ export function RegistrationForm({
       setFormData({});
       setFieldErrors({});
     } catch {
-      setResult({
-        ok: false,
-        fullPage: true,
-        message: "Errore inatteso. Riprova tra poco.",
-      });
+      setToastError("Errore inatteso. Riprova tra poco.");
     } finally {
       setIsSubmitting(false);
     }
@@ -584,7 +580,13 @@ export function RegistrationForm({
               variant="contained"
               type="submit"
               disabled={isSubmitting}
-              endIcon={<ArrowForwardIcon />}
+              endIcon={
+                isSubmitting ? (
+                  <CircularProgress size={18} color="inherit" />
+                ) : (
+                  <ArrowForwardIcon />
+                )
+              }
               sx={{ textTransform: "none", fontWeight: 700, px: 3 }}
             >
               {isSubmitting ? "Invio in corso..." : "Conferma iscrizione"}
@@ -592,16 +594,20 @@ export function RegistrationForm({
           </Stack>
         </Paper>
 
-        {result && result.message !== VALIDATION_SUMMARY_MESSAGE && (
+        <Snackbar
+          open={Boolean(toastError)}
+          autoHideDuration={6000}
+          onClose={() => setToastError(null)}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        >
           <Alert
-            severity={result.ok ? "success" : "error"}
-            role={result.ok ? "status" : "alert"}
-            aria-live={result.ok ? "polite" : "assertive"}
-            sx={{ mt: 2 }}
+            severity="error"
+            onClose={() => setToastError(null)}
+            sx={{ width: "100%" }}
           >
-            {result.message}
+            {toastError}
           </Alert>
-        )}
+        </Snackbar>
 
         <Box aria-live="polite" sx={visuallyHiddenSx}>
           {isSubmitting ? "Invio in corso" : ""}

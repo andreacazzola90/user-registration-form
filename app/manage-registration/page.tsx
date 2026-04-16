@@ -5,6 +5,7 @@ import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   Divider,
   MenuItem,
   Paper,
@@ -52,6 +53,10 @@ export default function ManageRegistrationPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [successPage, setSuccessPage] = useState<{
+    type: "updated" | "deleted";
     text: string;
   } | null>(null);
 
@@ -120,9 +125,9 @@ export default function ManageRegistrationPage() {
         throw new Error(data.message || "Errore durante l'aggiornamento");
       }
 
-      setMessage({
-        type: "success",
-        text: data.message || "Prenotazione aggiornata",
+      setSuccessPage({
+        type: "updated",
+        text: data.message || "Prenotazione aggiornata con successo.",
       });
     } catch (error: unknown) {
       const text =
@@ -162,8 +167,8 @@ export default function ManageRegistrationPage() {
         throw new Error(data.message || "Errore durante la cancellazione");
       }
 
-      setMessage({
-        type: "success",
+      setSuccessPage({
+        type: "deleted",
         text: "Prenotazione cancellata con successo.",
       });
       setFields([]);
@@ -228,6 +233,70 @@ export default function ManageRegistrationPage() {
           field.field_type === "number" ? { htmlInput: { min: 0 } } : undefined
         }
       />
+    );
+  }
+
+  if (successPage) {
+    return (
+      <ThemeProvider theme={formTheme}>
+        <Box
+          component="section"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          sx={{
+            minHeight: "100vh",
+            width: "100%",
+            display: "grid",
+            placeItems: "center",
+            px: 2,
+            py: 4,
+          }}
+        >
+          <Paper
+            elevation={0}
+            sx={{
+              width: "100%",
+              maxWidth: 760,
+              border: "1px solid #cdeee9",
+              borderRadius: 3,
+              p: { xs: 3, md: 6 },
+              textAlign: "center",
+              backgroundColor: "#f3fffd",
+            }}
+          >
+            <Box
+              aria-hidden="true"
+              sx={{
+                width: 72,
+                height: 72,
+                borderRadius: "50%",
+                backgroundColor: "#0f8a84",
+                color: "#fff",
+                display: "grid",
+                placeItems: "center",
+                fontSize: 22,
+                fontWeight: 700,
+                mx: "auto",
+                mb: 1.5,
+              }}
+            >
+              OK
+            </Box>
+            <Typography
+              variant="h4"
+              sx={{ mb: 1, color: "#1f2f35", fontSize: { xs: 30, md: 42 } }}
+            >
+              {successPage.type === "updated"
+                ? "Prenotazione aggiornata"
+                : "Prenotazione cancellata"}
+            </Typography>
+            <Typography sx={{ color: "#2f4450", fontSize: { xs: 16, md: 18 } }}>
+              {successPage.text}
+            </Typography>
+          </Paper>
+        </Box>
+      </ThemeProvider>
     );
   }
 
@@ -306,6 +375,11 @@ export default function ManageRegistrationPage() {
                     isLoading || isDeleting || orderedFields.length === 0
                   }
                   onClick={handleDelete}
+                  endIcon={
+                    isDeleting ? (
+                      <CircularProgress size={18} color="inherit" />
+                    ) : undefined
+                  }
                 >
                   {isDeleting ? "Cancellazione..." : "Cancella prenotazione"}
                 </Button>
@@ -313,6 +387,11 @@ export default function ManageRegistrationPage() {
                   variant="contained"
                   type="submit"
                   disabled={isLoading || isSaving || orderedFields.length === 0}
+                  endIcon={
+                    isSaving ? (
+                      <CircularProgress size={18} color="inherit" />
+                    ) : undefined
+                  }
                   sx={{ textTransform: "none", fontWeight: 700, px: 3 }}
                 >
                   {isSaving ? "Salvataggio..." : "Salva modifiche"}
