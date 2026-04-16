@@ -13,9 +13,15 @@ type VerifiedToken = {
 };
 
 function getSecret() {
-  const secret = process.env.REGISTRATION_MANAGE_TOKEN_SECRET?.trim();
+  const secret =
+    process.env.REGISTRATION_MANAGE_TOKEN_SECRET?.trim() ||
+    process.env.APP_SECRET?.trim() ||
+    process.env.NEXTAUTH_SECRET?.trim() ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!secret) {
-    throw new Error("Missing REGISTRATION_MANAGE_TOKEN_SECRET");
+    throw new Error(
+      "Missing token secret: set REGISTRATION_MANAGE_TOKEN_SECRET (or APP_SECRET/NEXTAUTH_SECRET)",
+    );
   }
   return secret;
 }
