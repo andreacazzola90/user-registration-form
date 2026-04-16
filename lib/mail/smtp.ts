@@ -224,10 +224,23 @@ function buildTextBody(
 export async function sendRegistrationRecapEmail(
   payload: RegistrationEmailPayload,
 ) {
+  console.log("[SMTP] sendRegistrationRecapEmail called for:", payload.to);
+
   const config = getSmtpConfig();
   if (!config) {
+    console.error(
+      "[SMTP] Config mancante — controlla SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_FROM_EMAIL nel .env",
+    );
     return false;
   }
+
+  console.log("[SMTP] Config caricata:", {
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    user: config.user,
+    fromEmail: config.fromEmail,
+  });
 
   const transporter = nodemailer.createTransport({
     host: config.host,
@@ -239,7 +252,11 @@ export async function sendRegistrationRecapEmail(
     },
   });
 
-  await transporter.sendMail({
+  console.log("[SMTP] Verifica connessione al server...");
+  await transporter.verify();
+  console.log("[SMTP] Connessione verificata. Invio email a:", payload.to);
+
+  const info = await transporter.sendMail({
     from: `${config.fromName} <${config.fromEmail}>`,
     to: payload.to,
     subject:
@@ -262,5 +279,6 @@ export async function sendRegistrationRecapEmail(
     ),
   });
 
+  console.log("[SMTP] Email inviata con successo. MessageId:", info.messageId);
   return true;
 }
