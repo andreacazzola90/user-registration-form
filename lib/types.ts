@@ -1,7 +1,7 @@
 export type FieldType = "text" | "email" | "tel" | "number" | "select";
 
 export type SliderSlide = {
-  kicker: string;
+  kicker?: string;
   title: string;
   description: string;
   imageUrl: string;
