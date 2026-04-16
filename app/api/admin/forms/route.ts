@@ -28,7 +28,6 @@ const updateFormContentSchema = z.object({
   slider_data: z
     .array(
       z.object({
-        kicker: z.string().min(1),
         title: z.string().min(1),
         description: z.string().min(1),
         imageUrl: z.string().url(),

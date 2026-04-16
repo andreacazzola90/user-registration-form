@@ -37,7 +37,6 @@ export default function AdminSliderManager({
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<SliderSlide>({
-    kicker: "",
     title: "",
     description: "",
     imageUrl: "",
@@ -46,7 +45,6 @@ export default function AdminSliderManager({
   const handleAddSlide = () => {
     setEditingIndex(-1);
     setEditForm({
-      kicker: "",
       title: "",
       description: "",
       imageUrl: "",
@@ -60,7 +58,6 @@ export default function AdminSliderManager({
 
   const handleSaveSlide = () => {
     if (
-      !editForm.kicker.trim() ||
       !editForm.title.trim() ||
       !editForm.description.trim() ||
       !editForm.imageUrl.trim()
@@ -186,13 +183,6 @@ export default function AdminSliderManager({
                     variant="caption"
                     sx={{ color: "#5f6f7b", display: "block", mt: 1 }}
                   >
-                    Kicker
-                  </Typography>
-                  <p className="text-sm text-gray-700">{slide.kicker}</p>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "#5f6f7b", display: "block", mt: 1 }}
-                  >
                     Descrizione
                   </Typography>
                   <p className="text-sm text-gray-700">{slide.description}</p>
@@ -237,22 +227,6 @@ export default function AdminSliderManager({
             title={editingIndex === -1 ? "Nuova Slide" : "Modifica Slide"}
           />
           <CardContent className="space-y-6">
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                Kicker
-              </Typography>
-              <TextField
-                label="Kicker"
-                value={editForm.kicker}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, kicker: e.target.value })
-                }
-                fullWidth
-                size="small"
-                placeholder="es. Escursione"
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-            </Box>
             <Box>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
                 Titolo
@@ -358,7 +332,6 @@ export default function AdminSliderManager({
                 onClick={() => {
                   setEditingIndex(null);
                   setEditForm({
-                    kicker: "",
                     title: "",
                     description: "",
                     imageUrl: "",
