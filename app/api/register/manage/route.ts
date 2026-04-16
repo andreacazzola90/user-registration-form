@@ -106,6 +106,7 @@ export async function GET(request: Request) {
     const { data: fields, error: fieldsError } = await supabase
       .from("registration_fields")
       .select("*")
+      .eq("form_id", authResult.registration.form_id)
       .order("sort_order", { ascending: true });
 
     if (fieldsError) {

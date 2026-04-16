@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import DOMPurify from "isomorphic-dompurify";
 import {
   Alert,
   Box,
@@ -17,9 +18,15 @@ import {
   Typography,
   createTheme,
 } from "@mui/material";
-import type { RegistrationField, RegistrationStatus } from "@/lib/types";
+import type {
+  FormConfig,
+  RegistrationField,
+  RegistrationStatus,
+} from "@/lib/types";
 
 type Props = {
+  formId: string;
+  form: FormConfig;
   fields: RegistrationField[];
   labCapacityReached?: boolean;
 };
@@ -81,6 +88,8 @@ const formTheme = createTheme({
 });
 
 export function RegistrationForm({
+  formId,
+  form,
   fields,
   labCapacityReached = false,
 }: Props) {
@@ -93,6 +102,11 @@ export function RegistrationForm({
   const orderedFields = useMemo(
     () => [...fields].sort((a, b) => a.sort_order - b.sort_order),
     [fields],
+  );
+
+  const sanitizedInfoDescription = useMemo(
+    () => DOMPurify.sanitize(form.info_description ?? ""),
+    [form.info_description],
   );
 
   const requiredCount = orderedFields.filter((field) => field.required).length;
@@ -194,7 +208,7 @@ export function RegistrationForm({
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ form_id: formId, ...payload }),
       });
 
       const data = (await response.json()) as SubmitResult;
@@ -415,14 +429,13 @@ export function RegistrationForm({
           sx={{ border: "1px solid #b9c5d1", p: { xs: 2.5, md: 4 } }}
         >
           <Typography id="registration-form-title" variant="h4" sx={{ mb: 1 }}>
-            Passeggiata del 24 maggio 2026
+            {form.title}
           </Typography>
           <Typography
             id="registration-form-summary"
             sx={{ color: "#445867", mb: 2.5 }}
           >
-            Modulo di iscrizione alla passeggiata itinerante per famiglie
-            prevista per il 24 maggio 2026.
+            {form.description}
           </Typography>
           <Typography id="registration-form-help" sx={visuallyHiddenSx}>
             Compila il modulo. In caso di errore, il campo verra' evidenziato e
@@ -441,33 +454,19 @@ export function RegistrationForm({
             }}
           >
             <Typography sx={{ fontSize: 24, fontWeight: 700, mb: 0.5 }}>
-              Informazioni sulla passeggiata
+              {form.info_title}
             </Typography>
             {/* <Typography sx={{ color: "#334955", mb: 1.5 }}>
               Prenotazione confermata per il {WALK_DETAILS.date} alle ore{" "}
               {WALK_DETAILS.startTime}.
             </Typography> */}
 
-            <Stack spacing={0.75} sx={{ mb: 1.5 }}>
-              <Typography>
-                <strong>Punto di ritrovo:</strong> {WALK_DETAILS.meetingPoint}
-              </Typography>
-              <Typography>
-                <strong>Durata prevista:</strong> {WALK_DETAILS.duration}
-              </Typography>
-              <Typography>
-                <strong>Iscrizioni e accoglienza:</strong> dalle ore{" "}
-                {WALK_DETAILS.checkInWindow}
-              </Typography>
-              <Typography>
-                <strong>Partenza del gruppo:</strong> ore{" "}
-                {WALK_DETAILS.startTime}
-              </Typography>
-              {/* <Typography>
-                <strong>Numero partecipanti:</strong> compilare i campi del
-                modulo qui sotto.
-              </Typography> */}
-            </Stack>
+            {sanitizedInfoDescription && (
+              <Box
+                sx={{ color: "#334955", mb: 0.75 }}
+                dangerouslySetInnerHTML={{ __html: sanitizedInfoDescription }}
+              />
+            )}
 
             {/* <Typography sx={{ color: "#334955", mb: 0.75 }}>
               Chiediamo puntualita': trattandosi di una passeggiata itinerante,
@@ -501,10 +500,10 @@ export function RegistrationForm({
           </Box>
 
           <Typography sx={{ fontSize: 24, fontWeight: 700, mb: 0.75 }}>
-            Compila il form di registrazione
+            {form.registration_title}
           </Typography>
           <Typography sx={{ color: "#445867", mb: 2.5 }}>
-            Compila i campi seguenti per completare l&apos;iscrizione.
+            {form.registration_description}
           </Typography>
 
           {labCapacityReached && (
@@ -574,7 +573,7 @@ export function RegistrationForm({
             }}
           >
             <Typography sx={{ color: "#435764", fontSize: 14 }}>
-              Riceverai una mail di conferma o lista d&apos;attesa.
+              {form.submit_note}
             </Typography>
             <Button
               variant="contained"

@@ -8,7 +8,11 @@ import {
 } from "@/lib/registration-manage-token";
 import type { RegistrationField } from "@/lib/types";
 
-const payloadSchema = z.record(z.string(), z.union([z.string(), z.number()]));
+const payloadSchema = z
+  .object({
+    form_id: z.string().uuid(),
+  })
+  .catchall(z.union([z.string(), z.number()]));
 
 const KNOWN_KEYS = new Set([
   "first_name",
@@ -32,13 +36,17 @@ function toNumber(value: string | number | undefined) {
 
 export async function POST(request: Request) {
   try {
-    const payload = payloadSchema.parse(await request.json());
+    const { form_id: formId, ...rest } = payloadSchema.parse(
+      await request.json(),
+    );
+    const payload = rest as Record<string, string | number>;
     const supabase = createSupabaseAdminClient();
 
     const { data: fields, error: fieldsError } = await supabase
       .from("registration_fields")
       .select("*")
       .eq("active", true)
+      .eq("form_id", formId)
       .order("sort_order", { ascending: true });
 
     if (fieldsError) {
@@ -91,6 +99,7 @@ export async function POST(request: Request) {
         p_children_under_3: childrenUnder3,
         p_children_over_3_labs: childrenOver3Labs,
         p_adults: adults,
+        p_form_id: formId,
         p_additional_data: additionalData,
       },
     );

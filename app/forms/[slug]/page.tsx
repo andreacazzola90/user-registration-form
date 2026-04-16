@@ -13,13 +13,13 @@ type Props = {
 
 export default async function PublicFormPage({ params }: Props) {
   const { slug } = await params;
-  const form = getPublicFormBySlug(slug);
+  const form = await getPublicFormBySlug(slug);
 
   if (!form) {
     notFound();
   }
 
-  const fields = await getPublicRegistrationFields();
+  const fields = await getPublicRegistrationFields(form.id);
   let labCapacityReached = false;
 
   try {
@@ -28,11 +28,13 @@ export default async function PublicFormPage({ params }: Props) {
       supabase
         .from("event_settings")
         .select("lab_capacity")
+        .eq("form_id", form.id)
         .limit(1)
         .maybeSingle(),
       supabase
         .from("registrations")
         .select("children_over_3_labs")
+        .eq("form_id", form.id)
         .eq("status", "confirmed"),
     ]);
 
@@ -55,13 +57,15 @@ export default async function PublicFormPage({ params }: Props) {
         className="public-form-slider-pane"
         aria-label="Anteprima evento"
       >
-        <PublicFormSlider />
+        <PublicFormSlider slides={form.slider_data} />
       </section>
 
       <section className="public-form-content-pane">
         <div className="public-form-content-inner">
           <h1 className="sr-only">{`Modulo pubblico: ${form.title}`}</h1>
           <RegistrationForm
+            formId={form.id}
+            form={form}
             fields={fields.filter((field) => field.active)}
             labCapacityReached={labCapacityReached}
           />

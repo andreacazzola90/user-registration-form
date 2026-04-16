@@ -1,18 +1,37 @@
-export type PublicFormDefinition = {
-  slug: string;
-  title: string;
-  description: string;
-};
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { FormConfig } from "@/lib/types";
 
-export const PUBLIC_FORMS: PublicFormDefinition[] = [
-  {
-    slug: "passeggiata-monte-di-malo",
-    title: "Passeggiata Monte di Malo",
-    description:
-      "Iscrizione pubblica alla passeggiata itinerante con laboratori per bambini.",
-  },
-];
+export async function getAllPublicForms(): Promise<FormConfig[]> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase
+      .from("forms")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: true });
 
-export function getPublicFormBySlug(slug: string) {
-  return PUBLIC_FORMS.find((form) => form.slug === slug) ?? null;
+    if (error || !data) return [];
+    return data as FormConfig[];
+  } catch {
+    return [];
+  }
+}
+
+export async function getPublicFormBySlug(
+  slug: string,
+): Promise<FormConfig | null> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase
+      .from("forms")
+      .select("*")
+      .eq("slug", slug)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data as FormConfig;
+  } catch {
+    return null;
+  }
 }

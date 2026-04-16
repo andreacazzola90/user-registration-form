@@ -1,5 +1,27 @@
 export type FieldType = "text" | "email" | "tel" | "number" | "select";
 
+export type SliderSlide = {
+  kicker: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+};
+
+export type FormConfig = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  info_title: string;
+  info_description: string;
+  registration_title: string;
+  registration_description: string;
+  submit_note: string;
+  slider_data: SliderSlide[];
+  is_active: boolean;
+  created_at: string;
+};
+
 export type RegistrationField = {
   id: string;
   key: string;

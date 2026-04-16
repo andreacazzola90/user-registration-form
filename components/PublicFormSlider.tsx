@@ -1,4 +1,6 @@
-const SLIDES = [
+import type { SliderSlide } from "@/lib/types";
+
+const DEFAULT_SLIDES: SliderSlide[] = [
   {
     kicker: "Tra i fili d'erba",
     title: "Un mattino nella natura",
@@ -23,14 +25,31 @@ const SLIDES = [
     imageUrl:
       "https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1800&q=80",
   },
-] as const;
+];
 
-export function PublicFormSlider() {
+export function PublicFormSlider({ slides }: { slides?: SliderSlide[] }) {
+  const slidesToDisplay = slides && slides.length > 0 ? slides : DEFAULT_SLIDES;
+  const slideCount = slidesToDisplay.length;
+  const isSingleSlide = slideCount === 1;
+  const secondsPerSlide = 6;
+  const totalDuration = Math.max(slideCount * secondsPerSlide, secondsPerSlide);
+
   return (
     <div className="public-slider-root">
       <div className="public-slider-track" aria-hidden="true">
-        {SLIDES.map((slide) => (
-          <article key={slide.title} className="public-slider-slide">
+        {slidesToDisplay.map((slide, index) => (
+          <article
+            key={`${slide.title}-${index}`}
+            className="public-slider-slide"
+            style={{
+              ...(isSingleSlide
+                ? { animation: "none", opacity: 1 }
+                : {
+                    animationDelay: `${index * secondsPerSlide}s`,
+                    animationDuration: `${totalDuration}s`,
+                  }),
+            }}
+          >
             <div
               className="public-slider-media"
               style={{ backgroundImage: `url('${slide.imageUrl}')` }}
@@ -43,7 +62,6 @@ export function PublicFormSlider() {
           </article>
         ))}
       </div>
-
       <div className="public-slider-overlay" aria-hidden="true" />
     </div>
   );

@@ -351,26 +351,16 @@
 @keyframes public-slide-fade {
   0% {
     opacity: 0;
-    transform: translateY(10px) scale(1.01);
+    transform: translateY(0) scale(1.25);
   }
 
-  6% {
+  33% {
     opacity: 1;
     transform: translateY(0) scale(1);
-  }
-
-  29% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-
-  35% {
-    opacity: 0;
-    transform: translateY(-8px) scale(0.995);
   }
 
   100% {
     opacity: 0;
-    transform: translateY(-8px) scale(0.995);
+    transform: translateY(0) scale(1);
   }
 }
