@@ -196,6 +196,7 @@ function buildHtmlBody(
       <p style="margin:0 0 12px;">In caso di necessita o variazioni, non esiti a contattarci alla mail: ${escapeHtml(contactEmail || "[inserire email contatto]")}</p>
 
       <p style="margin:0 0 12px;">Di seguito trova il riepilogo dei dati inseriti:</p>
+      
       <table style="width:100%;border-collapse:collapse;background:#fff;">${rows}</table>
       ${linksSection}
 
