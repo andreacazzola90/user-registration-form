@@ -157,9 +157,7 @@ function buildHtmlBody(
     .join("");
 
   const linkItems = [
-    manageUrl
-      ? ""
-      : "",
+    manageUrl ? `<li></li>` : "",
     cancelUrl
       ? `<li><a href="${escapeHtml(cancelUrl)}">Cancella prenotazione</a></li>`
       : "",
