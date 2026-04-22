@@ -146,7 +146,7 @@ function buildHtmlBody(
 
   const statusParagraph =
     status === "confirmed"
-      ? "la presente per confermare la Sua prenotazione per la passeggiata prevista in data 24/05/26 alle ore 10.00."
+      ? "la presente per confermare la Sua prenotazione per la passeggiata prevista in data 24/05/26 alle ore 9.30."
       : "la presente per confermare la ricezione della Sua prenotazione. Al momento la richiesta risulta in lista d'attesa e Le comunicheremo tempestivamente eventuali aggiornamenti.";
 
   const rows = recapFields
@@ -158,7 +158,7 @@ function buildHtmlBody(
 
   const linkItems = [
     manageUrl
-      ? `<li><a href="${escapeHtml(manageUrl)}">Modifica prenotazione</a></li>`
+      ? ""
       : "",
     cancelUrl
       ? `<li><a href="${escapeHtml(cancelUrl)}">Cancella prenotazione</a></li>`
@@ -180,24 +180,26 @@ function buildHtmlBody(
       <p style="margin:0 0 6px;">Durata prevista: 2 ore circa</p>
       <p style="margin:0 0 12px;">Numero partecipanti: ${escapeHtml(participantsText)}</p>
 
-      <p style="margin:0 0 12px;">Le iscrizioni saranno aperte dalle 9.30 alle 10.00.</p>
-      <p style="margin:0 0 12px;">Chiediamo di essere puntuali in quanto, trattandosi di una passeggiata itinerante, si partira tutti insieme alle ore 10.00 per poter garantire ai bambini il regolare svolgimento dei laboratori.</p>
+      <p style="margin:0 0 12px;">Le iscrizioni saranno aperte dalle 9.00 alle 9.30.</p>
+      <p style="margin:0 0 12px;">Chiediamo di essere puntuali in quanto, trattandosi di una passeggiata itinerante, si partira tutti insieme alle ore 9.30 per poter garantire ai bambini il regolare svolgimento dei laboratori.</p>
 
       <p style="margin:0 0 6px;">Si consiglia di venire muniti di:</p>
       <ul style="margin:0 0 12px 18px;padding:0;">
+        <li>Per facilitare l’organizzazione, chiediamo gentilmente di portare contanti con importo esatto(Pagamento solo in contanti)</li>
         <li>abbigliamento comodo e scarpe da ginnastica</li>
         <li>acqua</li>
         <li>passeggino da trekking</li>
         <li>consigliamo di portare un bicchiere da casa per il ristoro</li>
       </ul>
 
-      <p style="margin:0 0 12px;">Con l'occasione ricordiamo che per il pranzo vi e la possibilita di usufruire del ricco Stand della Sagra di San Giuseppe che si terra nel piazzale della Chiesa.</p>
+      <p style="margin:0 0 12px;">Con l'occasione ricordiamo che per il pranzo vi è la possibilità di usufruire del ricco Stand gastronomico della Sagra di San Giuseppe che si terrà nel piazzale della Chiesa.</p>
       <p style="margin:0 0 12px;">In caso di necessita o variazioni, non esiti a contattarci alla mail: ${escapeHtml(contactEmail || "[inserire email contatto]")}</p>
 
       <p style="margin:0 0 12px;">Di seguito trova il riepilogo dei dati inseriti:</p>
       <table style="width:100%;border-collapse:collapse;background:#fff;">${rows}</table>
       ${linksSection}
 
+      <p style="margin:16px 0 0;">“Alla fine del percorso, una sorpresa aspetta ogni bambino partecipante al laboratorio!” 🎁</p>
       <p style="margin:16px 0 0;">Restiamo a disposizione per qualsiasi informazione e Le auguriamo una piacevole esperienza.</p>
       <p style="margin:12px 0 0;">Cordiali saluti,<br/>Lo Staff di "Tra i fili d'erba"</p>
     </div>
@@ -256,7 +258,6 @@ export async function sendRegistrationRecapEmail(
       payload.fullName,
       payload.status,
       payload.recapFields,
-      payload.manageUrl,
       payload.cancelUrl,
     ),
   });

@@ -350,6 +350,7 @@ export function RegistrationForm({
 
   if (result?.ok || result?.fullPage) {
     const isErrorPage = !result.ok;
+    const isWaitlistResult = result.ok && result.status === "waitlist";
 
     return (
       <ThemeProvider theme={formTheme}>
@@ -372,11 +373,19 @@ export function RegistrationForm({
             sx={{
               width: "100%",
               maxWidth: 760,
-              border: isErrorPage ? "1px solid #ffd6d6" : "1px solid #cdeee9",
+              border: isErrorPage
+                ? "1px solid #ffd6d6"
+                : isWaitlistResult
+                  ? "1px solid #f3dd8b"
+                  : "1px solid #cdeee9",
               borderRadius: 3,
               p: { xs: 3, md: 6 },
               textAlign: "center",
-              backgroundColor: isErrorPage ? "#fff8f8" : "#f3fffd",
+              backgroundColor: isErrorPage
+                ? "#fff8f8"
+                : isWaitlistResult
+                  ? "#fff9e8"
+                  : "#f3fffd",
             }}
           >
             <Box
@@ -385,7 +394,11 @@ export function RegistrationForm({
                 width: 72,
                 height: 72,
                 borderRadius: "50%",
-                backgroundColor: isErrorPage ? "#d32f2f" : "#0f8a84",
+                backgroundColor: isErrorPage
+                  ? "#d32f2f"
+                  : isWaitlistResult
+                    ? "#f0c541"
+                    : "#0f8a84",
                 color: "#fff",
                 display: "grid",
                 placeItems: "center",
@@ -403,7 +416,9 @@ export function RegistrationForm({
             >
               {isErrorPage
                 ? "Errore durante l'iscrizione"
-                : "Iscrizione avvenuta con successo"}
+                : isWaitlistResult
+                  ? "Inserimento in lista d'attesa"
+                  : "Iscrizione avvenuta con successo"}
             </Typography>
             <Typography sx={{ color: "#2f4450", fontSize: { xs: 16, md: 18 } }}>
               {result.message}
