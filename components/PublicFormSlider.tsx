@@ -124,25 +124,27 @@ export function PublicFormSlider({ slides }: { slides?: SliderSlide[] }) {
   return (
     <div className="public-slider-root">
       <div className="public-slider-track" aria-hidden="true">
-        {slidesToDisplay.map((slide, index) => (
-          <article
-            key={`${slide.title}-${index}`}
-            className="public-slider-slide"
-          >
-            <div
-              className="public-slider-media"
+        {slidesToDisplay.map((slide, index) => {
+          const isActive = index === activeSlideIndex;
+          return (
+            <article
+              key={`${slide.title}-${index}`}
+              className="public-slider-slide"
               style={{
-                backgroundImage: `url('${slide.imageUrl}')`,
-                ...(isSingleSlide
-                  ? { animation: "none", opacity: 1 }
-                  : {
-                      animationDelay: `${index * secondsPerSlide}s`,
-                      animationDuration: `${totalDuration}s`,
-                    }),
+                opacity: isActive ? 1 : 0,
+                pointerEvents: isActive ? "auto" : "none",
+                transition: isSingleSlide ? "none" : "opacity 0.8s ease-in-out",
               }}
-            />
-          </article>
-        ))}
+            >
+              <div
+                className="public-slider-media"
+                style={{
+                  backgroundImage: `url('${slide.imageUrl}')`,
+                }}
+              />
+            </article>
+          );
+        })}
       </div>
       <div key={activeSlideIndex} className="public-slider-content">
         <div className="public-slider-wash" aria-hidden="true" />
@@ -150,7 +152,7 @@ export function PublicFormSlider({ slides }: { slides?: SliderSlide[] }) {
           key={`${activeSlide.title}-${activeSlideIndex}`}
           className={`public-slider-copy ${textPhaseClassName}`}
         >
-          <h2 className="public-slider-title">{activeSlide.title}</h2>
+          <h2 className="public-slider-title text-4xl">{activeSlide.title}</h2>
           <p className="public-slider-description">{activeSlide.description}</p>
         </div>
       </div>
