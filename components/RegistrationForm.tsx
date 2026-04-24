@@ -431,6 +431,13 @@ export function RegistrationForm({
                   : "Lista d'attesa"}
               </Typography>
             )}
+            {!isErrorPage && (
+              <Typography sx={{ mt: 1.5, color: "#556677", fontSize: 13 }}>
+                Se non ricevi l&apos;email di conferma entro qualche minuto,
+                controlla anche la cartella <strong>Spam</strong> o{" "}
+                <strong>Posta indesiderata</strong>.
+              </Typography>
+            )}
           </Paper>
         </Box>
       </ThemeProvider>
