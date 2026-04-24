@@ -157,9 +157,6 @@ function buildHtmlBody(
     .join("");
 
   const linkItems = [
-    manageUrl
-      ? `<li><a href="${escapeHtml(manageUrl)}">Modifica prenotazione</a></li>`
-      : "",
     cancelUrl
       ? `<li><a href="${escapeHtml(cancelUrl)}">Cancella prenotazione</a></li>`
       : "",
@@ -196,11 +193,12 @@ function buildHtmlBody(
       <p style="margin:0 0 12px;">In caso di necessita o variazioni, non esiti a contattarci alla mail: ${escapeHtml(contactEmail || "[inserire email contatto]")}</p>
 
       <p style="margin:0 0 12px;">Di seguito trova il riepilogo dei dati inseriti:</p>
-      
+
       <table style="width:100%;border-collapse:collapse;background:#fff;">${rows}</table>
       ${linksSection}
 
       <p style="margin:16px 0 0;">“Alla fine del percorso, una sorpresa aspetta ogni bambino partecipante al laboratorio!” 🎁</p>
+      <p style="margin:16px 0 0;font-size:13px;color:#556677;">Nota: se non dovesse trovare questa email nella posta in arrivo, verifichi anche la cartella <strong>Spam</strong> o <strong>Posta indesiderata</strong>.</p>
       <p style="margin:16px 0 0;">Restiamo a disposizione per qualsiasi informazione e Le auguriamo una piacevole esperienza.</p>
       <p style="margin:12px 0 0;">Cordiali saluti,<br/>Lo Staff di "Tra i fili d'erba"</p>
     </div>
@@ -259,6 +257,7 @@ export async function sendRegistrationRecapEmail(
       payload.fullName,
       payload.status,
       payload.recapFields,
+      payload.manageUrl,
       payload.cancelUrl,
     ),
   });
