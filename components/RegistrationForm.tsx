@@ -622,6 +622,13 @@ export function RegistrationForm({
               {isSubmitting ? "Invio in corso..." : "Conferma iscrizione"}
             </Button>
           </Stack>
+          <Typography
+            sx={{ mt: 2, color: "#556677", fontSize: 13, textAlign: "center" }}
+          >
+            Dopo l&apos;iscrizione riceverai un&apos;email di conferma. Se non
+            dovesse arrivare, controlla anche la cartella <strong>Spam</strong>{" "}
+            o <strong>Posta indesiderata</strong>.
+          </Typography>
         </Paper>
 
         <Snackbar
