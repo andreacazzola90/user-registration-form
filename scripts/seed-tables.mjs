@@ -6,7 +6,9 @@ const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const serviceRoleKey =
+    process.env.SECRET_SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
 const includeSampleRegistrations =
     process.env.SEED_INCLUDE_SAMPLE_REGISTRATIONS === "true";
 
@@ -18,7 +20,7 @@ if (!supabaseUrl || !serviceRoleKey) {
     }
 
     if (!serviceRoleKey) {
-        missingVars.push("SUPABASE_SERVICE_ROLE_KEY");
+        missingVars.push("SECRET_SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_ROLE_KEY)");
     }
 
     console.error(

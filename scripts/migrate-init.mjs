@@ -9,7 +9,9 @@ function buildDbUrl() {
     const rawPoolerUrl = process.env.SUPABASE_DB_POOLER_URL?.trim();
     const rawDbUrl = process.env.SUPABASE_DB_URL?.trim();
     const projectRef = process.env.SUPABASE_PROJECT_REF?.trim();
-    const dbPassword = process.env.SUPABASE_DB_PASSWORD?.trim();
+    const dbPassword =
+        process.env.SECRET_SUPABASE_DB_PASSWORD?.trim() ||
+        process.env.SUPABASE_DB_PASSWORD?.trim();
     const usePooler = process.env.SUPABASE_USE_POOLER === "true";
     const poolerHost =
         process.env.SUPABASE_POOLER_HOST?.trim() ||
@@ -31,7 +33,7 @@ function buildDbUrl() {
             new URL(value);
         } catch {
             console.error(
-                `${envVarName} is not a valid URL. If your password contains special characters, URL-encode it (or use SUPABASE_PROJECT_REF + SUPABASE_DB_PASSWORD).`,
+                `${envVarName} is not a valid URL. If your password contains special characters, URL-encode it (or use SUPABASE_PROJECT_REF + SECRET_SUPABASE_DB_PASSWORD).`,
             );
             process.exit(1);
         }
@@ -59,7 +61,7 @@ function buildDbUrl() {
     }
 
     console.error(
-        "Missing database connection settings. Provide SUPABASE_DB_POOLER_URL, SUPABASE_DB_URL, or both SUPABASE_PROJECT_REF and SUPABASE_DB_PASSWORD.",
+        "Missing database connection settings. Provide SUPABASE_DB_POOLER_URL, SUPABASE_DB_URL, or both SUPABASE_PROJECT_REF and SECRET_SUPABASE_DB_PASSWORD (or SUPABASE_DB_PASSWORD).",
     );
     process.exit(1);
 }

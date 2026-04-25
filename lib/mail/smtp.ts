@@ -78,7 +78,9 @@ function parseSecure(value: string | undefined, fallback: boolean) {
 function getSmtpConfig(): SmtpConfig | null {
   const host = process.env.SMTP_HOST?.trim();
   const user = process.env.SMTP_USER?.trim();
-  const password = process.env.SMTP_PASSWORD?.trim();
+  const password =
+    process.env.SECRET_SMTP_PASSWORD?.trim() ??
+    process.env.SMTP_PASSWORD?.trim();
   const fromEmail = process.env.SMTP_FROM_EMAIL?.trim();
   const fromName =
     process.env.SMTP_FROM_NAME?.trim() || "Segreteria iscrizioni";
@@ -219,7 +221,7 @@ export async function sendRegistrationRecapEmail(
   const config = getSmtpConfig();
   if (!config) {
     console.error(
-      "[SMTP] Config mancante — controlla SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_FROM_EMAIL nel .env",
+      "[SMTP] Config mancante — controlla SMTP_HOST, SMTP_USER, SECRET_SMTP_PASSWORD (o SMTP_PASSWORD), SMTP_FROM_EMAIL nel .env",
     );
     return false;
   }
