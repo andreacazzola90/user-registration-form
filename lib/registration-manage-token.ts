@@ -17,6 +17,7 @@ function getSecret() {
     process.env.REGISTRATION_MANAGE_TOKEN_SECRET?.trim() ||
     process.env.APP_SECRET?.trim() ||
     process.env.NEXTAUTH_SECRET?.trim() ||
+    process.env.SECRET_SUPABASE_SERVICE_ROLE_KEY?.trim() ||
     process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!secret) {
     throw new Error(
