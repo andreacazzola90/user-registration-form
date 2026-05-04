@@ -623,6 +623,11 @@ export function RegistrationForm({
             </Button>
           </Stack>
           <Typography
+            sx={{ mt: 2, color: "#778899", fontSize: 12, textAlign: "center", fontStyle: "italic" }}
+          >
+            Gli organizzatori declinano ogni responsabilit&agrave; per danni a persone o cose che dovessero verificarsi prima, durante o dopo la manifestazione.
+          </Typography>
+          <Typography
             sx={{ mt: 2, color: "#556677", fontSize: 13, textAlign: "center" }}
           >
             Dopo l&apos;iscrizione riceverai un&apos;email di conferma. Se non
