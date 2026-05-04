@@ -184,7 +184,7 @@ function buildHtmlBody(
 
       <p style="margin:0 0 6px;">Si consiglia di venire muniti di:</p>
       <ul style="margin:0 0 12px 18px;padding:0;">
-        <li>Per facilitare l’organizzazione, chiediamo gentilmente di portare contanti con importo esatto(Pagamento solo in contanti)</li>
+        <li>Per facilitare l'organizzazione, chiediamo gentilmente di portare contanti con importo esatto (Pagamento solo in contanti). Il costo e' di <strong>3 euro a partecipante per i bambini sopra i 3 anni</strong> (gratuito per i bambini fino a 3 anni compresi)</li>
         <li>abbigliamento comodo e scarpe da ginnastica</li>
         <li>acqua</li>
         <li>passeggino da trekking</li>
@@ -201,6 +201,7 @@ function buildHtmlBody(
 
       <p style="margin:16px 0 0;">“Alla fine del percorso, una sorpresa aspetta ogni bambino partecipante al laboratorio!” 🎁</p>
       <p style="margin:16px 0 0;font-size:13px;color:#556677;">Nota: se non dovesse trovare questa email nella posta in arrivo, verifichi anche la cartella <strong>Spam</strong> o <strong>Posta indesiderata</strong>.</p>
+      <p style="margin:16px 0 0;font-size:12px;color:#778899;"><em>Gli organizzatori declinano ogni responsabilit&agrave; per danni a persone o cose che dovessero verificarsi prima, durante o dopo la manifestazione.</em></p>
       <p style="margin:16px 0 0;">Restiamo a disposizione per qualsiasi informazione e Le auguriamo una piacevole esperienza.</p>
       <p style="margin:12px 0 0;">Cordiali saluti,<br/>Lo Staff di "Tra i fili d'erba"</p>
     </div>
