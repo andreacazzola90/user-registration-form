@@ -184,7 +184,7 @@ function buildHtmlBody(
 
       <p style="margin:0 0 6px;">Si consiglia di venire muniti di:</p>
       <ul style="margin:0 0 12px 18px;padding:0;">
-        <li>Per facilitare l'organizzazione, chiediamo gentilmente di portare contanti con importo esatto (Pagamento solo in contanti). Il costo e' di <strong>3 euro a partecipante per i partecipanti sopra i 10 anni</strong> (gratuito per i bambini fino a 10 anni compresi)</li>
+        <li>Per facilitare l'organizzazione, chiediamo gentilmente di portare contanti con importo esatto (Pagamento solo in contanti). Il costo e' di <strong>3 euro a partecipante per i partecipanti dai 10 anni in su</strong> (gratuito per i bambini sotto i 10 anni)</li>
         <li>abbigliamento comodo e scarpe da ginnastica</li>
         <li>acqua</li>
         <li>passeggino da trekking</li>
