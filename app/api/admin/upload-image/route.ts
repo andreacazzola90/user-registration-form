@@ -1,24 +1,20 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
 
 const BUCKET_NAME = "user-registration-form";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 async function requireUser() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  return { supabase, user };
+  const email = await getAdminEmail();
+  return { email };
 }
 
 export async function POST(request: Request) {
-  const { supabase, user } = await requireUser();
+  const { email } = await requireUser();
 
-  if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!email) {
+    return unauthorizedResponse();
   }
 
   try {

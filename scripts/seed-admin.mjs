@@ -11,7 +11,6 @@ const serviceRoleKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY;
 const adminEmail = process.env.ADMIN_EMAIL || "andracazzola90@gmail.com";
 const adminPassword =
-    process.env.SECRET_ADMIN_PASSWORD ||
     process.env.ADMIN_PASSWORD ||
     "farfalla24";
 
