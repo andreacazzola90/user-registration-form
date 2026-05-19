@@ -1,22 +1,21 @@
 import { redirect } from "next/navigation";
 import { AdminDashboardClient } from "@/components/AdminDashboardClient";
 import { AdminFormsManager } from "@/components/AdminFormsManager";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getAdminEmail } from "@/lib/admin-session";
 import type { FormConfig } from "@/lib/types";
 import { Box, Chip, Stack, Typography } from "@mui/material";
 
 export const dynamic = "force-dynamic";
 
 async function getDashboardData() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const email = await getAdminEmail();
 
-  if (!user) {
+  if (!email) {
     redirect("/admin/login");
   }
 
+  const supabase = createSupabaseAdminClient();
   const { data: forms } = await supabase
     .from("forms")
     .select("*")
@@ -24,7 +23,7 @@ async function getDashboardData() {
 
   return {
     forms: (forms ?? []) as FormConfig[],
-    email: user.email ?? "admin",
+    email,
   };
 }
 

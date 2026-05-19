@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
 
 const updateSettingsSchema = z.object({
   form_id: z.string().uuid(),
@@ -8,19 +9,16 @@ const updateSettingsSchema = z.object({
 });
 
 async function requireUser() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  return { supabase, user };
+  const email = await getAdminEmail();
+  const supabase = createSupabaseAdminClient();
+  return { supabase, email };
 }
 
 export async function PUT(request: Request) {
-  const { supabase, user } = await requireUser();
+  const { supabase, email } = await requireUser();
 
-  if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!email) {
+    return unauthorizedResponse();
   }
 
   try {

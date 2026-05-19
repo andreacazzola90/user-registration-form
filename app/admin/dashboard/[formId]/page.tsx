@@ -1,7 +1,8 @@
 import { redirect, notFound } from "next/navigation";
 import { AdminDashboardClient } from "@/components/AdminDashboardClient";
 import { AdminDashboardTabs } from "@/components/AdminDashboardTabs";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getAdminEmail } from "@/lib/admin-session";
 import type {
   FormConfig,
   RegistrationField,
@@ -20,17 +21,15 @@ type Props = {
 };
 
 async function getFormDashboardData(formId: string) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const email = await getAdminEmail();
 
-  if (!user) {
+  if (!email) {
     redirect("/admin/login");
   }
 
+  const supabase = createSupabaseAdminClient();
+
   const [
-    formResponse,
     fieldsResponse,
     registrationsResponse,
     settingsResponse,
