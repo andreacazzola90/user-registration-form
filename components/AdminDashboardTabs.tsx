@@ -105,8 +105,14 @@ export function AdminDashboardTabs({
         <Tabs
           value={activeTab}
           onChange={(_, newValue) => setActiveTab(newValue as TabKey)}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{
             px: { xs: 1, md: 2 },
+            "& .MuiTabs-scrollButtons": {
+              color: "#0f8a84",
+            },
             "& .MuiTabs-indicator": {
               backgroundColor: "#0f8a84",
               height: 3,
@@ -118,6 +124,7 @@ export function AdminDashboardTabs({
               fontWeight: 500,
               py: 1.5,
               px: 2,
+              minWidth: "max-content",
               minHeight: "auto",
               "&.Mui-selected": {
                 color: "#0f8a84",
