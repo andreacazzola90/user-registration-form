@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { Cormorant_Garamond, Nunito } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 
 const sans = Nunito({
@@ -30,12 +29,6 @@ export default function RootLayout({
       <body
         className={`${sans.variable} ${serif.variable} font-[var(--font-sans)] m-0`}
       >
-        {process.env.NODE_ENV === "development" && (
-          <Script
-            src="https://cdn.tailwindcss.com"
-            strategy="beforeInteractive"
-          />
-        )}
         <AppRouterCacheProvider>{children}</AppRouterCacheProvider>
       </body>
     </html>

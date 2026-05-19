@@ -30,6 +30,7 @@ async function getFormDashboardData(formId: string) {
   const supabase = createSupabaseAdminClient();
 
   const [
+    formResponse,
     fieldsResponse,
     registrationsResponse,
     settingsResponse,
@@ -66,7 +67,7 @@ async function getFormDashboardData(formId: string) {
     fields: (fieldsResponse.data ?? []) as RegistrationField[],
     registrations: (registrationsResponse.data ?? []) as RegistrationRecord[],
     capacity: settingsResponse.data?.lab_capacity ?? 50,
-    email: user.email ?? "admin",
+    email: email ?? "admin",
   };
 }
 
