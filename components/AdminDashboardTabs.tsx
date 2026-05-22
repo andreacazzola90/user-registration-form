@@ -19,6 +19,8 @@ type Props = {
   fields: RegistrationField[];
   registrations: RegistrationRecord[];
   capacity: number;
+  maxParticipants: number;
+  registrationsCloseAt: string | null;
 };
 
 type TabKey = "participants" | "fields" | "contents" | "slides" | "rules";
@@ -29,6 +31,8 @@ export function AdminDashboardTabs({
   fields,
   registrations,
   capacity,
+  maxParticipants,
+  registrationsCloseAt,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>("participants");
   const waitlistCount = registrations.filter(
@@ -194,6 +198,9 @@ export function AdminDashboardTabs({
           <AdminRulesManager
             formId={formId}
             initialLabCapacity={capacity}
+            initialMaxParticipants={maxParticipants}
+            initialRegistrationsCloseAt={registrationsCloseAt}
+            totalRegistrations={registrations.length}
             confirmedLabChildren={registrations
               .filter((registration) => registration.status === "confirmed")
               .reduce(
