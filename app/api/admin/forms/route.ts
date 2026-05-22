@@ -15,6 +15,7 @@ const createFormSchema = z.object({
   title: z.string().min(3),
   description: z.string().default(""),
   lab_capacity: z.number().int().positive().default(50),
+  max_participants: z.number().int().positive().default(200),
 });
 
 const updateFormContentSchema = z.object({
@@ -123,6 +124,7 @@ export async function POST(request: Request) {
       .insert({
         form_id: form.id,
         lab_capacity: body.lab_capacity,
+        max_participants: body.max_participants,
       });
 
     if (settingsError) {

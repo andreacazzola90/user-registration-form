@@ -108,6 +108,17 @@ export async function POST(request: Request) {
       const uniqueViolation = error.message
         .toLowerCase()
         .includes("duplicate key");
+      const registrationsClosed = error.message
+        .toLowerCase()
+        .includes("registrations_closed");
+
+      if (registrationsClosed) {
+        return NextResponse.json(
+          { message: "Le iscrizioni sono concluse" },
+          { status: 409 },
+        );
+      }
+
       if (uniqueViolation) {
         return NextResponse.json(
           { message: "Esiste gia una registrazione oggi con questa email" },

@@ -6,6 +6,8 @@ import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
 const updateSettingsSchema = z.object({
   form_id: z.string().uuid(),
   lab_capacity: z.number().int().positive(),
+  max_participants: z.number().int().positive(),
+  registrations_close_at: z.string().datetime().nullable(),
 });
 
 async function requireUser() {
@@ -45,6 +47,8 @@ export async function PUT(request: Request) {
         .insert({
           form_id: body.form_id,
           lab_capacity: body.lab_capacity,
+          max_participants: body.max_participants,
+          registrations_close_at: body.registrations_close_at,
         });
 
       if (insertError) {
@@ -61,6 +65,8 @@ export async function PUT(request: Request) {
       .from("event_settings")
       .update({
         lab_capacity: body.lab_capacity,
+        max_participants: body.max_participants,
+        registrations_close_at: body.registrations_close_at,
         updated_at: new Date().toISOString(),
       })
       .eq("id", settingsRow.id);

@@ -17,15 +17,25 @@ import SaveIcon from "@mui/icons-material/Save";
 type Props = {
   formId: string;
   initialLabCapacity: number;
+  initialMaxParticipants: number;
+  initialRegistrationsCloseAt: string | null;
+  totalRegistrations: number;
   confirmedLabChildren: number;
 };
 
 export function AdminRulesManager({
   formId,
   initialLabCapacity,
+  initialMaxParticipants,
+  initialRegistrationsCloseAt,
+  totalRegistrations,
   confirmedLabChildren,
 }: Props) {
   const [labCapacity, setLabCapacity] = useState(initialLabCapacity);
+  const [maxParticipants, setMaxParticipants] = useState(initialMaxParticipants);
+  const [registrationsCloseAt, setRegistrationsCloseAt] = useState(
+    toDateTimeLocalValue(initialRegistrationsCloseAt),
+  );
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -41,6 +51,8 @@ export function AdminRulesManager({
         body: JSON.stringify({
           form_id: formId,
           lab_capacity: Number(labCapacity),
+          max_participants: Number(maxParticipants),
+          registrations_close_at: toIsoOrNull(registrationsCloseAt),
         }),
       });
 
@@ -54,6 +66,10 @@ export function AdminRulesManager({
   }
 
   const reachedLimit = confirmedLabChildren >= labCapacity;
+  const maxParticipantsReached = totalRegistrations >= maxParticipants;
+  const closeDateReached = isCloseDateReached(registrationsCloseAt);
+  const registrationsClosed = maxParticipantsReached || closeDateReached;
+
   const usagePercent =
     labCapacity > 0
       ? Math.min((confirmedLabChildren / labCapacity) * 100, 100)
@@ -82,8 +98,8 @@ export function AdminRulesManager({
               Regole
             </Typography>
             <Typography sx={{ fontSize: 15, color: "#62707c", mt: 1 }}>
-              Gestisci la soglia dei bambini nei laboratori per controllare
-              automaticamente la lista d&apos;attesa.
+              Definisci capienza laboratori, limite massimo iscrizioni e data
+              di chiusura per bloccare automaticamente il form pubblico.
             </Typography>
           </Stack>
         </CardContent>
@@ -113,6 +129,33 @@ export function AdminRulesManager({
                   }}
                 />
 
+                <TextField
+                  type="number"
+                  label="Numero massimo iscrizioni"
+                  size="small"
+                  fullWidth
+                  value={maxParticipants}
+                  onChange={(e) => setMaxParticipants(Number(e.target.value))}
+                  required
+                  slotProps={{
+                    htmlInput: { min: 1 },
+                  }}
+                  helperText="Raggiunta questa soglia, il form viene nascosto e compare il messaggio di iscrizioni concluse."
+                />
+
+                <TextField
+                  type="datetime-local"
+                  label="Data e ora chiusura iscrizioni"
+                  size="small"
+                  fullWidth
+                  value={registrationsCloseAt}
+                  onChange={(e) => setRegistrationsCloseAt(e.target.value)}
+                  helperText="Campo opzionale: da questa data/ora il form viene bloccato automaticamente."
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                  }}
+                />
+
                 <Card
                   elevation={0}
                   sx={{ border: "1px solid #d9dfe7", bgcolor: "#f8fafc" }}
@@ -135,10 +178,13 @@ export function AdminRulesManager({
                         fontSize: 18,
                         fontWeight: 700,
                         color: "#2d3943",
-                        mb: 1.5,
+                        mb: 0.5,
                       }}
                     >
                       {confirmedLabChildren} / {labCapacity}
+                    </Typography>
+                    <Typography sx={{ fontSize: 13, color: "#62707c", mb: 1.5 }}>
+                      Iscrizioni totali: {totalRegistrations} / {maxParticipants}
                     </Typography>
                     <LinearProgress
                       variant="determinate"
@@ -179,8 +225,8 @@ export function AdminRulesManager({
           elevation={0}
           sx={{
             border: "1px solid",
-            borderColor: reachedLimit ? "#f44336" : "#4caf50",
-            bgcolor: reachedLimit
+            borderColor: registrationsClosed ? "#f44336" : "#4caf50",
+            bgcolor: registrationsClosed
               ? "rgba(244, 67, 54, 0.05)"
               : "rgba(76, 175, 80, 0.05)",
           }}
@@ -202,16 +248,21 @@ export function AdminRulesManager({
                 sx={{
                   fontSize: 16,
                   fontWeight: 700,
-                  color: reachedLimit ? "#f44336" : "#4caf50",
+                  color: registrationsClosed ? "#f44336" : "#4caf50",
                 }}
               >
-                {reachedLimit
-                  ? "Limite raggiunto: nuove iscrizioni in lista d'attesa"
-                  : "Limite disponibile: nuove iscrizioni confermate"}
+                {registrationsClosed
+                  ? "Iscrizioni concluse: il form pubblico e bloccato"
+                  : "Iscrizioni aperte"}
               </Typography>
               <Typography sx={{ fontSize: 14, color: "#62707c" }}>
-                Modificando il limite qui, il comportamento del modulo pubblico
-                si aggiorna in tempo reale.
+                {closeDateReached
+                  ? "Motivo: data di chiusura raggiunta."
+                  : maxParticipantsReached
+                    ? "Motivo: raggiunto il numero massimo di iscrizioni."
+                    : reachedLimit
+                      ? "Nota: capienza laboratori raggiunta, nuove richieste in lista d'attesa."
+                      : "Le modifiche vengono applicate in tempo reale al modulo pubblico."}
               </Typography>
             </Stack>
           </CardContent>
@@ -225,4 +276,40 @@ export function AdminRulesManager({
       )}
     </Stack>
   );
+}
+
+function toDateTimeLocalValue(value: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  const offsetMs = parsed.getTimezoneOffset() * 60_000;
+  return new Date(parsed.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+function toIsoOrNull(value: string) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed.toISOString();
+}
+
+function isCloseDateReached(value: string) {
+  if (!value) {
+    return false;
+  }
+
+  const parsed = new Date(value);
+  return !Number.isNaN(parsed.getTime()) && Date.now() >= parsed.getTime();
 }

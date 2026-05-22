@@ -48,7 +48,7 @@ async function getFormDashboardData(formId: string) {
       .order("created_at", { ascending: false }),
     supabase
       .from("event_settings")
-      .select("lab_capacity")
+      .select("lab_capacity, max_participants, registrations_close_at")
       .eq("form_id", formId)
       .limit(1)
       .maybeSingle(),
@@ -67,6 +67,8 @@ async function getFormDashboardData(formId: string) {
     fields: (fieldsResponse.data ?? []) as RegistrationField[],
     registrations: (registrationsResponse.data ?? []) as RegistrationRecord[],
     capacity: settingsResponse.data?.lab_capacity ?? 50,
+    maxParticipants: settingsResponse.data?.max_participants ?? 200,
+    registrationsCloseAt: settingsResponse.data?.registrations_close_at ?? null,
     email: email ?? "admin",
   };
 }
@@ -180,6 +182,8 @@ export default async function FormDashboardPage({ params }: Props) {
           fields={data.fields}
           registrations={data.registrations}
           capacity={data.capacity}
+          maxParticipants={data.maxParticipants}
+          registrationsCloseAt={data.registrationsCloseAt}
         />
       </Box>
     </AdminDashboardClient>

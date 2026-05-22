@@ -21,13 +21,14 @@ export default async function PublicFormPage({ params }: Props) {
 
   const fields = await getPublicRegistrationFields(form.id);
   let labCapacityReached = false;
+  let registrationsClosed = false;
 
   try {
     const supabase = createSupabaseAdminClient();
-    const [settingsResponse, confirmedResponse] = await Promise.all([
+    const [settingsResponse, confirmedResponse, registrationsCountResponse] = await Promise.all([
       supabase
         .from("event_settings")
-        .select("lab_capacity")
+        .select("lab_capacity, max_participants, registrations_close_at")
         .eq("form_id", form.id)
         .limit(1)
         .maybeSingle(),
@@ -36,19 +37,40 @@ export default async function PublicFormPage({ params }: Props) {
         .select("children_over_3_labs")
         .eq("form_id", form.id)
         .eq("status", "confirmed"),
+      supabase
+        .from("registrations")
+        .select("id", { count: "exact", head: true })
+        .eq("form_id", form.id),
     ]);
 
-    if (!settingsResponse.error && !confirmedResponse.error) {
+    if (
+      !settingsResponse.error &&
+      !confirmedResponse.error &&
+      !registrationsCountResponse.error
+    ) {
       const labCapacity = settingsResponse.data?.lab_capacity ?? 50;
+      const maxParticipants = settingsResponse.data?.max_participants ?? 200;
+      const registrationsCloseAt = settingsResponse.data?.registrations_close_at;
+      const totalRegistrations = registrationsCountResponse.count ?? 0;
+
       const confirmedChildrenOver3Labs = (confirmedResponse.data ?? []).reduce(
         (total, row) => total + Number(row.children_over_3_labs ?? 0),
         0,
       );
 
       labCapacityReached = confirmedChildrenOver3Labs >= labCapacity;
+      registrationsClosed = totalRegistrations >= maxParticipants;
+
+      if (registrationsCloseAt) {
+        const closeDate = new Date(registrationsCloseAt);
+        if (!Number.isNaN(closeDate.getTime()) && Date.now() >= closeDate.getTime()) {
+          registrationsClosed = true;
+        }
+      }
     }
   } catch {
     labCapacityReached = false;
+    registrationsClosed = false;
   }
 
   return (
@@ -68,6 +90,7 @@ export default async function PublicFormPage({ params }: Props) {
             form={form}
             fields={fields.filter((field) => field.active)}
             labCapacityReached={labCapacityReached}
+            registrationsClosed={registrationsClosed}
           />
         </div>
       </section>

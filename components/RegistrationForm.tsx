@@ -29,6 +29,7 @@ type Props = {
   form: FormConfig;
   fields: RegistrationField[];
   labCapacityReached?: boolean;
+  registrationsClosed?: boolean;
 };
 
 type SubmitResult = {
@@ -92,6 +93,7 @@ export function RegistrationForm({
   form,
   fields,
   labCapacityReached = false,
+  registrationsClosed = false,
 }: Props) {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -345,6 +347,75 @@ export function RegistrationForm({
           },
         }}
       />
+    );
+  }
+
+  if (registrationsClosed) {
+    return (
+      <ThemeProvider theme={formTheme}>
+        <Box sx={{ width: "100%", maxWidth: 740, mx: "auto" }}>
+          <Paper
+            elevation={0}
+            sx={{
+              border: "1px solid #b9c5d1",
+              p: { xs: 3, md: 4 },
+              backgroundColor: "#ffffff",
+            }}
+          >
+            <Typography id="registration-form-title" variant="h4" sx={{ mb: 1 }}>
+              {form.title}
+            </Typography>
+            <Typography
+              id="registration-form-summary"
+              sx={{ color: "#445867", mb: 2.5 }}
+            >
+              {form.description}
+            </Typography>
+
+            <Divider sx={{ mb: 2.5 }} />
+
+            <Box
+              sx={{
+                mb: 3,
+                p: { xs: 2, md: 2.5 },
+                borderRadius: 2,
+                border: "1px solid #c9e4e1",
+                backgroundColor: "#f4fbfa",
+              }}
+            >
+              <Typography sx={{ fontSize: 24, fontWeight: 700, mb: 0.5 }}>
+                {form.info_title}
+              </Typography>
+              {sanitizedInfoDescription && (
+                <Box
+                  sx={{ color: "#334955", mb: 0.75 }}
+                  dangerouslySetInnerHTML={{ __html: sanitizedInfoDescription }}
+                />
+              )}
+            </Box>
+
+            <Paper
+              elevation={0}
+              sx={{
+                border: "1px solid #f3c1c1",
+                p: { xs: 3, md: 4 },
+                backgroundColor: "#fff8f8",
+                textAlign: "center",
+              }}
+            >
+            <Typography
+              variant="h4"
+              sx={{ mb: 1, color: "#7a1f1f", fontSize: { xs: 28, md: 36 } }}
+            >
+              Le iscrizioni sono concluse
+            </Typography>
+            <Typography sx={{ color: "#5a3a3a", fontSize: 16 }}>
+              Il modulo non e piu disponibile. Grazie per l&apos;interesse.
+            </Typography>
+            </Paper>
+          </Paper>
+        </Box>
+      </ThemeProvider>
     );
   }
 
