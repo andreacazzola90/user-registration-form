@@ -16,6 +16,7 @@ import {
   createTheme,
 } from "@mui/material";
 import type { RegistrationField } from "@/lib/types";
+import { TicketSelector } from "@/components/TicketSelector";
 
 type RegistrationValues = Record<string, string | number>;
 
@@ -188,6 +189,21 @@ export default function ManageRegistrationPage() {
   function renderField(field: RegistrationField) {
     const value = formData[field.key] ?? "";
 
+    if (field.field_type === "tickets") {
+      return (
+        <TicketSelector
+          id={field.key}
+          tickets={field.options.filter(
+            (option) => typeof option !== "string",
+          )}
+          value={String(value)}
+          onChange={(nextValue) =>
+            setFormData((prev) => ({ ...prev, [field.key]: nextValue }))
+          }
+        />
+      );
+    }
+
     const commonProps = {
       id: field.key,
       name: field.key,
@@ -216,11 +232,13 @@ export default function ManageRegistrationPage() {
       return (
         <TextField {...commonProps} select>
           <MenuItem value="">Seleziona...</MenuItem>
-          {field.options.map((option) => (
-            <MenuItem key={option} value={option}>
-              {option}
-            </MenuItem>
-          ))}
+          {field.options
+            .filter((option): option is string => typeof option === "string")
+            .map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
         </TextField>
       );
     }

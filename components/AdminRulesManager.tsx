@@ -9,29 +9,23 @@ import {
   CardContent,
   TextField,
   Typography,
-  LinearProgress,
   Alert,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 
 type Props = {
   formId: string;
-  initialLabCapacity: number;
   initialMaxParticipants: number;
   initialRegistrationsCloseAt: string | null;
   totalRegistrations: number;
-  confirmedLabChildren: number;
 };
 
 export function AdminRulesManager({
   formId,
-  initialLabCapacity,
   initialMaxParticipants,
   initialRegistrationsCloseAt,
   totalRegistrations,
-  confirmedLabChildren,
 }: Props) {
-  const [labCapacity, setLabCapacity] = useState(initialLabCapacity);
   const [maxParticipants, setMaxParticipants] = useState(initialMaxParticipants);
   const [registrationsCloseAt, setRegistrationsCloseAt] = useState(
     toDateTimeLocalValue(initialRegistrationsCloseAt),
@@ -50,7 +44,6 @@ export function AdminRulesManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           form_id: formId,
-          lab_capacity: Number(labCapacity),
           max_participants: Number(maxParticipants),
           registrations_close_at: toIsoOrNull(registrationsCloseAt),
         }),
@@ -65,15 +58,9 @@ export function AdminRulesManager({
     }
   }
 
-  const reachedLimit = confirmedLabChildren >= labCapacity;
   const maxParticipantsReached = totalRegistrations >= maxParticipants;
   const closeDateReached = isCloseDateReached(registrationsCloseAt);
   const registrationsClosed = maxParticipantsReached || closeDateReached;
-
-  const usagePercent =
-    labCapacity > 0
-      ? Math.min((confirmedLabChildren / labCapacity) * 100, 100)
-      : 0;
 
   return (
     <Stack spacing={3}>
@@ -98,8 +85,8 @@ export function AdminRulesManager({
               Regole
             </Typography>
             <Typography sx={{ fontSize: 15, color: "#62707c", mt: 1 }}>
-              Definisci capienza laboratori, limite massimo iscrizioni e data
-              di chiusura per bloccare automaticamente il form pubblico.
+              Definisci il limite massimo di iscrizioni e la data di chiusura
+              per bloccare automaticamente il form pubblico.
             </Typography>
           </Stack>
         </CardContent>
@@ -116,19 +103,6 @@ export function AdminRulesManager({
           <CardContent sx={{ p: 2.5 }}>
             <form onSubmit={handleSubmit}>
               <Stack spacing={2.5}>
-                <TextField
-                  type="number"
-                  label="Limite massimo bambini nei laboratori"
-                  size="small"
-                  fullWidth
-                  value={labCapacity}
-                  onChange={(e) => setLabCapacity(Number(e.target.value))}
-                  required
-                  slotProps={{
-                    htmlInput: { min: 1 },
-                  }}
-                />
-
                 <TextField
                   type="number"
                   label="Numero massimo iscrizioni"
@@ -156,50 +130,9 @@ export function AdminRulesManager({
                   }}
                 />
 
-                <Card
-                  elevation={0}
-                  sx={{ border: "1px solid #d9dfe7", bgcolor: "#f8fafc" }}
-                >
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography
-                      sx={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                        color: "#485560",
-                        mb: 1,
-                      }}
-                    >
-                      Occupazione attuale
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: 18,
-                        fontWeight: 700,
-                        color: "#2d3943",
-                        mb: 0.5,
-                      }}
-                    >
-                      {confirmedLabChildren} / {labCapacity}
-                    </Typography>
-                    <Typography sx={{ fontSize: 13, color: "#62707c", mb: 1.5 }}>
-                      Iscrizioni totali: {totalRegistrations} / {maxParticipants}
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={usagePercent}
-                      sx={{
-                        height: 6,
-                        borderRadius: 3,
-                        backgroundColor: "#dde3ea",
-                        "& .MuiLinearProgress-bar": {
-                          backgroundColor: "#0f8a84",
-                        },
-                      }}
-                    />
-                  </CardContent>
-                </Card>
+                <Typography sx={{ fontSize: 14, color: "#62707c" }}>
+                  Iscrizioni totali: {totalRegistrations} / {maxParticipants}
+                </Typography>
 
                 <Box>
                   <Button
@@ -260,9 +193,7 @@ export function AdminRulesManager({
                   ? "Motivo: data di chiusura raggiunta."
                   : maxParticipantsReached
                     ? "Motivo: raggiunto il numero massimo di iscrizioni."
-                    : reachedLimit
-                      ? "Nota: capienza laboratori raggiunta, nuove richieste in lista d'attesa."
-                      : "Le modifiche vengono applicate in tempo reale al modulo pubblico."}
+                    : "Le modifiche vengono applicate in tempo reale al modulo pubblico."}
               </Typography>
             </Stack>
           </CardContent>

@@ -5,9 +5,10 @@ import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
 
 const updateSettingsSchema = z.object({
   form_id: z.string().uuid(),
-  lab_capacity: z.number().int().positive(),
-  max_participants: z.number().int().positive(),
-  registrations_close_at: z.string().datetime().nullable(),
+  lab_capacity: z.number().int().positive().optional(),
+  lab_capacity_enabled: z.boolean().optional(),
+  max_participants: z.number().int().positive().optional(),
+  registrations_close_at: z.string().datetime().nullable().optional(),
 });
 
 async function requireUser() {
@@ -28,7 +29,7 @@ export async function PUT(request: Request) {
 
     const { data: settingsRow, error: settingsReadError } = await supabase
       .from("event_settings")
-      .select("id")
+      .select("id, lab_capacity_enabled")
       .eq("form_id", body.form_id)
       .order("id", { ascending: true })
       .limit(1)
@@ -41,14 +42,60 @@ export async function PUT(request: Request) {
       );
     }
 
+    const updatesLabSettings =
+      body.lab_capacity !== undefined ||
+      body.lab_capacity_enabled !== undefined;
+
+    if (updatesLabSettings) {
+      const { data: form, error: formError } = await supabase
+        .from("forms")
+        .select("slug")
+        .eq("id", body.form_id)
+        .maybeSingle();
+
+      if (formError) {
+        return NextResponse.json(
+          { message: formError.message },
+          { status: 500 },
+        );
+      }
+
+      if (form?.slug !== "passeggiata-monte-di-malo") {
+        return NextResponse.json(
+          { message: "Il controllo laboratori non e disponibile per questo form" },
+          { status: 400 },
+        );
+      }
+    }
+
+    if (
+      body.lab_capacity !== undefined &&
+      !settingsRow?.lab_capacity_enabled &&
+      body.lab_capacity_enabled !== true
+    ) {
+      return NextResponse.json(
+        { message: "La capienza laboratori non e abilitata per questo form" },
+        { status: 400 },
+      );
+    }
+
     if (!settingsRow) {
       const { error: insertError } = await supabase
         .from("event_settings")
         .insert({
           form_id: body.form_id,
-          lab_capacity: body.lab_capacity,
-          max_participants: body.max_participants,
-          registrations_close_at: body.registrations_close_at,
+          ...(body.lab_capacity !== undefined
+            ? { lab_capacity: body.lab_capacity }
+            : {}),
+          ...(body.lab_capacity_enabled !== undefined
+            ? { lab_capacity_enabled: body.lab_capacity_enabled }
+            : {}),
+          ...(body.max_participants !== undefined
+            ? { max_participants: body.max_participants }
+            : {}),
+          ...(body.registrations_close_at !== undefined
+            ? { registrations_close_at: body.registrations_close_at }
+            : {}),
         });
 
       if (insertError) {
@@ -64,9 +111,18 @@ export async function PUT(request: Request) {
     const { error: updateError } = await supabase
       .from("event_settings")
       .update({
-        lab_capacity: body.lab_capacity,
-        max_participants: body.max_participants,
-        registrations_close_at: body.registrations_close_at,
+        ...(body.lab_capacity !== undefined
+          ? { lab_capacity: body.lab_capacity }
+          : {}),
+        ...(body.lab_capacity_enabled !== undefined
+          ? { lab_capacity_enabled: body.lab_capacity_enabled }
+          : {}),
+        ...(body.max_participants !== undefined
+          ? { max_participants: body.max_participants }
+          : {}),
+        ...(body.registrations_close_at !== undefined
+          ? { registrations_close_at: body.registrations_close_at }
+          : {}),
         updated_at: new Date().toISOString(),
       })
       .eq("id", settingsRow.id);

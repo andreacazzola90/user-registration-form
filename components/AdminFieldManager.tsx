@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { RegistrationField } from "@/lib/types";
+import type { RegistrationField, TicketOption } from "@/lib/types";
 import {
   Box,
   Stack,
@@ -15,6 +15,8 @@ import {
   Alert,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 type Props = {
   formId: string;
@@ -27,11 +29,92 @@ const TYPES: RegistrationField["field_type"][] = [
   "tel",
   "number",
   "select",
+  "tickets",
 ];
+
+function isTicketOption(
+  option: string | TicketOption,
+): option is TicketOption {
+  return typeof option !== "string";
+}
 
 export function AdminFieldManager({ formId, initialFields }: Props) {
   const [fields, setFields] = useState(initialFields);
   const [status, setStatus] = useState<string | null>(null);
+  const [uploadingTicketId, setUploadingTicketId] = useState<string | null>(
+    null,
+  );
+
+  function updateField(index: number, patch: Partial<RegistrationField>) {
+    setFields((current) => {
+      const next = [...current];
+      next[index] = { ...next[index], ...patch };
+      return next;
+    });
+  }
+
+  function ticketOptions(field: RegistrationField) {
+    return field.options.filter(isTicketOption);
+  }
+
+  function updateTicket(
+    fieldIndex: number,
+    ticketId: string,
+    patch: Partial<TicketOption>,
+  ) {
+    const field = fields[fieldIndex];
+    updateField(fieldIndex, {
+      options: ticketOptions(field).map((ticket) =>
+        ticket.id === ticketId ? { ...ticket, ...patch } : ticket,
+      ),
+    });
+  }
+
+  function addTicket(fieldIndex: number) {
+    const field = fields[fieldIndex];
+    updateField(fieldIndex, {
+      options: [
+        ...ticketOptions(field),
+        {
+          id: crypto.randomUUID(),
+          title: "",
+          price: 0,
+          imageUrl: "",
+        },
+      ],
+    });
+  }
+
+  async function uploadTicketImage(
+    fieldIndex: number,
+    ticketId: string,
+    file: File,
+  ) {
+    setUploadingTicketId(ticketId);
+    setStatus(null);
+
+    try {
+      const uploadData = new FormData();
+      uploadData.append("file", file);
+      const response = await fetch("/api/admin/upload-image", {
+        method: "POST",
+        body: uploadData,
+      });
+      const data = (await response.json()) as {
+        imageUrl?: string;
+        message?: string;
+      };
+
+      if (!response.ok || !data.imageUrl) {
+        setStatus(data.message ?? "Errore durante il caricamento");
+        return;
+      }
+
+      updateTicket(fieldIndex, ticketId, { imageUrl: data.imageUrl });
+    } finally {
+      setUploadingTicketId(null);
+    }
+  }
 
   async function saveField(field: RegistrationField) {
     setStatus(null);
@@ -153,12 +236,9 @@ export function AdminFieldManager({ formId, initialFields }: Props) {
                     fullWidth
                     value={field.sort_order}
                     onChange={(e) => {
-                      const next = [...fields];
-                      next[index] = {
-                        ...field,
+                      updateField(index, {
                         sort_order: Number(e.target.value),
-                      };
-                      setFields(next);
+                      });
                     }}
                   />
 
@@ -168,9 +248,7 @@ export function AdminFieldManager({ formId, initialFields }: Props) {
                     fullWidth
                     value={field.label}
                     onChange={(e) => {
-                      const next = [...fields];
-                      next[index] = { ...field, label: e.target.value };
-                      setFields(next);
+                      updateField(index, { label: e.target.value });
                     }}
                   />
 
@@ -181,13 +259,11 @@ export function AdminFieldManager({ formId, initialFields }: Props) {
                     fullWidth
                     value={field.field_type}
                     onChange={(e) => {
-                      const next = [...fields];
-                      next[index] = {
-                        ...field,
+                      updateField(index, {
                         field_type: e.target
                           .value as RegistrationField["field_type"],
-                      };
-                      setFields(next);
+                        options: [],
+                      });
                     }}
                     slotProps={{
                       select: {
@@ -209,12 +285,9 @@ export function AdminFieldManager({ formId, initialFields }: Props) {
                       <Checkbox
                         checked={field.required}
                         onChange={(e) => {
-                          const next = [...fields];
-                          next[index] = {
-                            ...field,
+                          updateField(index, {
                             required: e.target.checked,
-                          };
-                          setFields(next);
+                          });
                         }}
                         size="small"
                       />
@@ -226,9 +299,7 @@ export function AdminFieldManager({ formId, initialFields }: Props) {
                       <Checkbox
                         checked={field.active}
                         onChange={(e) => {
-                          const next = [...fields];
-                          next[index] = { ...field, active: e.target.checked };
-                          setFields(next);
+                          updateField(index, { active: e.target.checked });
                         }}
                         size="small"
                       />
@@ -237,25 +308,129 @@ export function AdminFieldManager({ formId, initialFields }: Props) {
                   />
                 </Box>
 
-                <TextField
-                  label="Opzioni (separate da virgola)"
-                  size="small"
-                  fullWidth
-                  multiline
-                  rows={2}
-                  value={field.options.join(",")}
-                  onChange={(e) => {
-                    const options = e.target.value
-                      .split(",")
-                      .map((opt) => opt.trim())
-                      .filter(Boolean);
-
-                    const next = [...fields];
-                    next[index] = { ...field, options };
-                    setFields(next);
-                  }}
-                  placeholder="opzione1,opzione2"
-                />
+                {field.field_type === "tickets" ? (
+                  <Stack spacing={2}>
+                    {ticketOptions(field).map((ticket) => (
+                      <Box
+                        key={ticket.id}
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: {
+                            xs: "1fr",
+                            md: "96px minmax(0, 1fr) 140px auto",
+                          },
+                          gap: 1.5,
+                          alignItems: "center",
+                          p: 1.5,
+                          border: "1px solid #d9dfe7",
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Box
+                          component="img"
+                          src={ticket.imageUrl || undefined}
+                          alt=""
+                          sx={{
+                            width: 96,
+                            height: 72,
+                            objectFit: "cover",
+                            backgroundColor: "#eef2f6",
+                            borderRadius: 1,
+                          }}
+                        />
+                        <TextField
+                          label="Titolo biglietto"
+                          size="small"
+                          value={ticket.title}
+                          onChange={(event) =>
+                            updateTicket(index, ticket.id, {
+                              title: event.target.value,
+                            })
+                          }
+                        />
+                        <TextField
+                          label="Prezzo EUR"
+                          size="small"
+                          type="number"
+                          value={ticket.price}
+                          onChange={(event) =>
+                            updateTicket(index, ticket.id, {
+                              price: Math.max(0, Number(event.target.value)),
+                            })
+                          }
+                          slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+                        />
+                        <Button
+                          color="error"
+                          aria-label={`Elimina ${ticket.title || "biglietto"}`}
+                          onClick={() =>
+                            updateField(index, {
+                              options: ticketOptions(field).filter(
+                                (item) => item.id !== ticket.id,
+                              ),
+                            })
+                          }
+                        >
+                          <DeleteIcon />
+                        </Button>
+                        <Button
+                          component="label"
+                          variant="outlined"
+                          startIcon={<CloudUploadIcon />}
+                          disabled={uploadingTicketId === ticket.id}
+                          sx={{ gridColumn: { md: "2 / 4" } }}
+                        >
+                          {uploadingTicketId === ticket.id
+                            ? "Caricamento..."
+                            : ticket.imageUrl
+                              ? "Cambia immagine"
+                              : "Carica immagine"}
+                          <input
+                            hidden
+                            type="file"
+                            accept="image/*"
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              if (file) {
+                                void uploadTicketImage(index, ticket.id, file);
+                              }
+                            }}
+                          />
+                        </Button>
+                      </Box>
+                    ))}
+                    <Button
+                      variant="outlined"
+                      startIcon={<AddIcon />}
+                      onClick={() => addTicket(index)}
+                      sx={{ alignSelf: "flex-start" }}
+                    >
+                      Aggiungi biglietto
+                    </Button>
+                  </Stack>
+                ) : (
+                  <TextField
+                    label="Opzioni (separate da virgola)"
+                    size="small"
+                    fullWidth
+                    multiline
+                    rows={2}
+                    value={field.options
+                      .filter((option): option is string =>
+                        typeof option === "string",
+                      )
+                      .join(",")}
+                    onChange={(e) => {
+                      const options = e.target.value
+                        .split(",")
+                        .map((opt) => opt.trim())
+                        .filter(Boolean);
+                      updateField(index, { options });
+                    }}
+                    placeholder="opzione1,opzione2"
+                    disabled={field.field_type !== "select"}
+                  />
+                )}
 
                 <Box>
                   <Button

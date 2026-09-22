@@ -21,6 +21,7 @@ import {
 type Props = {
   registrations: RegistrationRecord[];
   capacity: number;
+  showLabMetrics: boolean;
 };
 
 function computeSummary(
@@ -50,7 +51,11 @@ function computeSummary(
   };
 }
 
-export function AdminRegistrationsTable({ registrations, capacity }: Props) {
+export function AdminRegistrationsTable({
+  registrations,
+  capacity,
+  showLabMetrics,
+}: Props) {
   const summary = computeSummary(registrations, capacity);
   const fillPercent =
     capacity > 0
@@ -83,63 +88,69 @@ export function AdminRegistrationsTable({ registrations, capacity }: Props) {
           </CardContent>
         </Card>
 
-        <Card elevation={0} sx={{ border: "1px solid #d9dfe7" }}>
-          <CardContent sx={{ p: 2 }}>
-            <Typography
-              sx={{ fontSize: 12, color: "#485560", fontWeight: 700, mb: 1 }}
-            >
-              BAMBINI LABORATORI
-            </Typography>
-            <Typography variant="h5" sx={{ color: "#2d3943" }}>
-              {summary.totalChildrenOver3Labs}
-            </Typography>
-          </CardContent>
-        </Card>
+        {showLabMetrics && (
+          <Card elevation={0} sx={{ border: "1px solid #d9dfe7" }}>
+            <CardContent sx={{ p: 2 }}>
+              <Typography
+                sx={{ fontSize: 12, color: "#485560", fontWeight: 700, mb: 1 }}
+              >
+                BAMBINI LABORATORI
+              </Typography>
+              <Typography variant="h5" sx={{ color: "#2d3943" }}>
+                {summary.totalChildrenOver3Labs}
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card elevation={0} sx={{ border: "1px solid #d9dfe7" }}>
-          <CardContent sx={{ p: 2 }}>
-            <Typography
-              sx={{ fontSize: 12, color: "#485560", fontWeight: 700, mb: 1 }}
-            >
-              ADULTI
-            </Typography>
-            <Typography variant="h5" sx={{ color: "#2d3943" }}>
-              {summary.totalAdults}
-            </Typography>
-          </CardContent>
-        </Card>
+        {showLabMetrics && (
+          <Card elevation={0} sx={{ border: "1px solid #d9dfe7" }}>
+            <CardContent sx={{ p: 2 }}>
+              <Typography
+                sx={{ fontSize: 12, color: "#485560", fontWeight: 700, mb: 1 }}
+              >
+                ADULTI
+              </Typography>
+              <Typography variant="h5" sx={{ color: "#2d3943" }}>
+                {summary.totalAdults}
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card
-          elevation={0}
-          sx={{ border: "1px solid #0f8a84", bgcolor: "#f0fffe" }}
-        >
-          <CardContent sx={{ p: 2 }}>
-            <Typography
-              sx={{ fontSize: 12, color: "#485560", fontWeight: 700, mb: 1 }}
-            >
-              DISPONIBILITÀ
-            </Typography>
-            <Typography variant="h5" sx={{ color: "#0f8a84", mb: 1.5 }}>
-              {summary.confirmedChildrenOver3Labs}/{capacity}
-            </Typography>
-            <LinearProgress
-              variant="determinate"
-              value={fillPercent}
-              sx={{
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: "#dde3ea",
-                "& .MuiLinearProgress-bar": {
-                  backgroundColor: "#0f8a84",
-                },
-                mb: 1,
-              }}
-            />
-            <Typography sx={{ fontSize: 12, color: "#62707c" }}>
-              Posti rimanenti: {summary.remainingSpots}
-            </Typography>
-          </CardContent>
-        </Card>
+        {showLabMetrics && (
+          <Card
+            elevation={0}
+            sx={{ border: "1px solid #0f8a84", bgcolor: "#f0fffe" }}
+          >
+            <CardContent sx={{ p: 2 }}>
+              <Typography
+                sx={{ fontSize: 12, color: "#485560", fontWeight: 700, mb: 1 }}
+              >
+                DISPONIBILITÀ
+              </Typography>
+              <Typography variant="h5" sx={{ color: "#0f8a84", mb: 1.5 }}>
+                {summary.confirmedChildrenOver3Labs}/{capacity}
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={fillPercent}
+                sx={{
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: "#dde3ea",
+                  "& .MuiLinearProgress-bar": {
+                    backgroundColor: "#0f8a84",
+                  },
+                  mb: 1,
+                }}
+              />
+              <Typography sx={{ fontSize: 12, color: "#62707c" }}>
+                Posti rimanenti: {summary.remainingSpots}
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
       </Box>
 
       <Paper
@@ -179,21 +190,21 @@ export function AdminRegistrationsTable({ registrations, capacity }: Props) {
                         borderBottom: "1px solid #dde3ea",
                       }}
                     >
-                      <TableCell
+                      {showLabMetrics && <TableCell
                         sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
                       >
                         Data
-                      </TableCell>
-                      <TableCell
+                      </TableCell>}
+                      {showLabMetrics && <TableCell
                         sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
                       >
                         Nome
-                      </TableCell>
-                      <TableCell
+                      </TableCell>}
+                      {showLabMetrics && <TableCell
                         sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
                       >
                         Cognome
-                      </TableCell>
+                      </TableCell>}
                       <TableCell
                         sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
                       >
@@ -244,23 +255,23 @@ export function AdminRegistrationsTable({ registrations, capacity }: Props) {
                           "&:hover": { backgroundColor: "#f8fafc" },
                         }}
                       >
-                        <TableCell
+                        {showLabMetrics && <TableCell
                           sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
                         >
                           {new Date(registration.created_at).toLocaleString(
                             "it-IT",
                           )}
-                        </TableCell>
-                        <TableCell
+                        </TableCell>}
+                        {showLabMetrics && <TableCell
                           sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
                         >
                           {registration.first_name}
-                        </TableCell>
-                        <TableCell
+                        </TableCell>}
+                        {showLabMetrics && <TableCell
                           sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
                         >
                           {registration.last_name}
-                        </TableCell>
+                        </TableCell>}
                         <TableCell
                           sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
                         >
@@ -371,7 +382,7 @@ export function AdminRegistrationsTable({ registrations, capacity }: Props) {
                             gap: 1,
                           }}
                         >
-                          <Box
+                          {showLabMetrics && <Box
                             sx={{
                               backgroundColor: "#f8fafc",
                               p: 1.5,
@@ -396,8 +407,8 @@ export function AdminRegistrationsTable({ registrations, capacity }: Props) {
                             >
                               {registration.phone}
                             </Typography>
-                          </Box>
-                          <Box
+                          </Box>}
+                          {showLabMetrics && <Box
                             sx={{
                               backgroundColor: "#f8fafc",
                               p: 1.5,
@@ -422,8 +433,8 @@ export function AdminRegistrationsTable({ registrations, capacity }: Props) {
                             >
                               {registration.country}
                             </Typography>
-                          </Box>
-                          <Box
+                          </Box>}
+                          {showLabMetrics && <Box
                             sx={{
                               backgroundColor: "#f8fafc",
                               p: 1.5,
@@ -449,7 +460,7 @@ export function AdminRegistrationsTable({ registrations, capacity }: Props) {
                             >
                               {registration.email}
                             </Typography>
-                          </Box>
+                          </Box>}
                           <Box
                             sx={{
                               backgroundColor: "#f8fafc",

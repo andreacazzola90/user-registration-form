@@ -28,7 +28,7 @@ export default async function PublicFormPage({ params }: Props) {
     const [settingsResponse, confirmedResponse, registrationsCountResponse] = await Promise.all([
       supabase
         .from("event_settings")
-        .select("lab_capacity, max_participants, registrations_close_at")
+        .select("lab_capacity, lab_capacity_enabled, max_participants, registrations_close_at")
         .eq("form_id", form.id)
         .limit(1)
         .maybeSingle(),
@@ -49,6 +49,9 @@ export default async function PublicFormPage({ params }: Props) {
       !registrationsCountResponse.error
     ) {
       const labCapacity = settingsResponse.data?.lab_capacity ?? 50;
+      const labCapacityEnabled =
+        settingsResponse.data?.lab_capacity_enabled ??
+        form.slug === "passeggiata-monte-di-malo";
       const maxParticipants = settingsResponse.data?.max_participants ?? 200;
       const registrationsCloseAt = settingsResponse.data?.registrations_close_at;
       const totalRegistrations = registrationsCountResponse.count ?? 0;
@@ -58,7 +61,8 @@ export default async function PublicFormPage({ params }: Props) {
         0,
       );
 
-      labCapacityReached = confirmedChildrenOver3Labs >= labCapacity;
+      labCapacityReached =
+        labCapacityEnabled && confirmedChildrenOver3Labs >= labCapacity;
       registrationsClosed = totalRegistrations >= maxParticipants;
 
       if (registrationsCloseAt) {
@@ -74,7 +78,7 @@ export default async function PublicFormPage({ params }: Props) {
   }
 
   return (
-    <main className="public-form-layout">
+    <main className="public-form-layout public-form-page">
       <section
         className="public-form-slider-pane"
         aria-label="Anteprima evento"
@@ -94,6 +98,9 @@ export default async function PublicFormPage({ params }: Props) {
           />
         </div>
       </section>
+      {form.custom_css_enabled && form.custom_css && (
+        <style data-form-custom-css>{form.custom_css}</style>
+      )}
     </main>
   );
 }

@@ -7,6 +7,11 @@ import {
   createRegistrationManageToken,
 } from "@/lib/registration-manage-token";
 import type { RegistrationField } from "@/lib/types";
+import type { TicketOption } from "@/lib/types";
+import {
+  formatTicketSelection,
+  normalizeTicketSelection,
+} from "@/lib/tickets";
 
 const payloadSchema = z
   .object({
@@ -59,7 +64,26 @@ export async function POST(request: Request) {
     const activeFields = (fields ?? []) as RegistrationField[];
 
     for (const field of activeFields) {
-      const value = payload[field.key];
+      let value = payload[field.key];
+
+      if (field.field_type === "tickets") {
+        const selection = normalizeTicketSelection(
+          value,
+          field.options.filter(
+            (option): option is TicketOption => typeof option !== "string",
+          ),
+        );
+        value = JSON.stringify(selection);
+        payload[field.key] = value;
+
+        if (field.required && selection.items.length === 0) {
+          return NextResponse.json(
+            { message: `Il campo ${field.label} e obbligatorio` },
+            { status: 400 },
+          );
+        }
+      }
+
       const missing =
         value === undefined ||
         value === null ||
@@ -136,7 +160,11 @@ export async function POST(request: Request) {
       .map((field) => {
         const raw = payload[field.key];
         const normalized =
-          typeof raw === "number" ? String(raw) : String(raw ?? "").trim();
+          field.field_type === "tickets"
+            ? formatTicketSelection(raw)
+            : typeof raw === "number"
+              ? String(raw)
+              : String(raw ?? "").trim();
 
         return {
           label: field.label,

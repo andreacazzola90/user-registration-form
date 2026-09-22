@@ -1,4 +1,17 @@
-export type FieldType = "text" | "email" | "tel" | "number" | "select";
+export type FieldType =
+  | "text"
+  | "email"
+  | "tel"
+  | "number"
+  | "select"
+  | "tickets";
+
+export type TicketOption = {
+  id: string;
+  title: string;
+  price: number;
+  imageUrl: string;
+};
 
 export type SliderSlide = {
   kicker?: string;
@@ -17,6 +30,8 @@ export type FormConfig = {
   registration_title: string;
   registration_description: string;
   submit_note: string;
+  custom_css: string;
+  custom_css_enabled: boolean;
   slider_data: SliderSlide[];
   is_active: boolean;
   created_at: string;
@@ -30,7 +45,7 @@ export type RegistrationField = {
   required: boolean;
   active: boolean;
   sort_order: number;
-  options: string[];
+  options: Array<string | TicketOption>;
 };
 
 export type RegistrationStatus = "confirmed" | "waitlist";

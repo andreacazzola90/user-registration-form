@@ -48,7 +48,7 @@ async function getFormDashboardData(formId: string) {
       .order("created_at", { ascending: false }),
     supabase
       .from("event_settings")
-      .select("lab_capacity, max_participants, registrations_close_at")
+      .select("lab_capacity, lab_capacity_enabled, max_participants, registrations_close_at")
       .eq("form_id", formId)
       .limit(1)
       .maybeSingle(),
@@ -67,6 +67,10 @@ async function getFormDashboardData(formId: string) {
     fields: (fieldsResponse.data ?? []) as RegistrationField[],
     registrations: (registrationsResponse.data ?? []) as RegistrationRecord[],
     capacity: settingsResponse.data?.lab_capacity ?? 50,
+    supportsLabCapacity:
+      formResponse.data.slug === "passeggiata-monte-di-malo",
+    labCapacityEnabled:
+      settingsResponse.data?.lab_capacity_enabled ?? false,
     maxParticipants: settingsResponse.data?.max_participants ?? 200,
     registrationsCloseAt: settingsResponse.data?.registrations_close_at ?? null,
     email: email ?? "admin",
@@ -163,7 +167,7 @@ export default async function FormDashboardPage({ params }: Props) {
               </Button>
             </Stack>
 
-            <Box sx={{ pt: 1 }}>
+            {data.labCapacityEnabled && <Box sx={{ pt: 1 }}>
               <Chip
                 label={`Capienza laboratori: ${data.capacity}`}
                 sx={{
@@ -172,7 +176,7 @@ export default async function FormDashboardPage({ params }: Props) {
                   fontWeight: 600,
                 }}
               />
-            </Box>
+            </Box>}
           </Stack>
         </Box>
 
@@ -184,6 +188,8 @@ export default async function FormDashboardPage({ params }: Props) {
           capacity={data.capacity}
           maxParticipants={data.maxParticipants}
           registrationsCloseAt={data.registrationsCloseAt}
+          supportsLabCapacity={data.supportsLabCapacity}
+          labCapacityEnabled={data.labCapacityEnabled}
         />
       </Box>
     </AdminDashboardClient>

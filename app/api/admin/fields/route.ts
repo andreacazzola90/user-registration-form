@@ -9,14 +9,28 @@ const createSchema = z.object({
   label: z.string().min(2),
 });
 
+const ticketOptionSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  price: z.number().nonnegative(),
+  imageUrl: z.string().url(),
+});
+
 const updateSchema = z.object({
   id: z.string().uuid(),
   label: z.string().min(2),
-  field_type: z.enum(["text", "email", "tel", "number", "select"]),
+  field_type: z.enum([
+    "text",
+    "email",
+    "tel",
+    "number",
+    "select",
+    "tickets",
+  ]),
   required: z.boolean(),
   active: z.boolean(),
   sort_order: z.number().int(),
-  options: z.array(z.string()),
+  options: z.array(z.union([z.string(), ticketOptionSchema])),
 });
 
 async function requireUser() {

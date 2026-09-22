@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyRegistrationManageToken } from "@/lib/registration-manage-token";
-import type { RegistrationField } from "@/lib/types";
+import type { RegistrationField, TicketOption } from "@/lib/types";
+import { normalizeTicketSelection } from "@/lib/tickets";
 
 const KNOWN_KEYS = new Set([
   "first_name",
@@ -164,6 +165,7 @@ export async function PATCH(request: Request) {
       .from("registration_fields")
       .select("*")
       .eq("active", true)
+      .eq("form_id", authResult.registration.form_id)
       .order("sort_order", { ascending: true });
 
     if (fieldsError) {
@@ -176,7 +178,26 @@ export async function PATCH(request: Request) {
     const activeFields = (fields ?? []) as RegistrationField[];
 
     for (const field of activeFields) {
-      const value = body.payload[field.key];
+      let value = body.payload[field.key];
+
+      if (field.field_type === "tickets") {
+        const selection = normalizeTicketSelection(
+          value,
+          field.options.filter(
+            (option): option is TicketOption => typeof option !== "string",
+          ),
+        );
+        value = JSON.stringify(selection);
+        body.payload[field.key] = value;
+
+        if (field.required && selection.items.length === 0) {
+          return NextResponse.json(
+            { message: `Il campo ${field.label} e obbligatorio` },
+            { status: 400 },
+          );
+        }
+      }
+
       const missing =
         value === undefined ||
         value === null ||

@@ -38,6 +38,12 @@ const updateFormContentSchema = z.object({
     .default([]),
 });
 
+const updateCustomCssSchema = z.object({
+  id: z.string().uuid(),
+  custom_css: z.string().max(50_000),
+  custom_css_enabled: z.boolean(),
+});
+
 async function requireUser() {
   const email = await getAdminEmail();
   const supabase = createSupabaseAdminClient();
@@ -195,5 +201,40 @@ export async function PUT(request: Request) {
       { message: "Payload non valido" },
       { status: 400 },
     );
+  }
+}
+
+export async function PATCH(request: Request) {
+  const { supabase, email } = await requireUser();
+
+  if (!email) {
+    return unauthorizedResponse();
+  }
+
+  try {
+    const body = updateCustomCssSchema.parse(await request.json());
+    const { error } = await supabase
+      .from("forms")
+      .update({
+        custom_css: body.custom_css,
+        custom_css_enabled: body.custom_css_enabled,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", body.id);
+
+    if (error) {
+      return NextResponse.json({ message: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ message: "CSS personalizzato aggiornato" });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: error.issues[0]?.message ?? "CSS non valido" },
+        { status: 400 },
+      );
+    }
+
+    return NextResponse.json({ message: "Payload non valido" }, { status: 400 });
   }
 }

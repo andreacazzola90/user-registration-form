@@ -3,6 +3,8 @@
 import { FormEvent, useMemo, useRef, useState } from "react";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import DOMPurify from "isomorphic-dompurify";
+import { TicketSelector } from "@/components/TicketSelector";
+import { parseTicketQuantities } from "@/lib/tickets";
 import {
   Alert,
   Box,
@@ -128,6 +130,15 @@ export function RegistrationForm({
   function validateField(field: RegistrationField, rawValue: string) {
     const value = rawValue.trim();
 
+    if (field.field_type === "tickets") {
+      const selectedQuantity = Object.values(
+        parseTicketQuantities(value),
+      ).reduce((sum, quantity) => sum + quantity, 0);
+      return field.required && selectedQuantity === 0
+        ? "Seleziona almeno un biglietto."
+        : "";
+    }
+
     if (field.required && !value) {
       return "Questo campo e' obbligatorio.";
     }
@@ -250,6 +261,40 @@ export function RegistrationForm({
     const fieldLabelId = `${field.key}-label`;
     const fieldHelperTextId = `${field.key}-helper-text`;
 
+    if (field.field_type === "tickets") {
+      const tickets = field.options.filter(
+        (option) => typeof option !== "string",
+      );
+
+      return (
+        <>
+          <TicketSelector
+            id={field.key}
+            tickets={tickets}
+            value={value}
+            onChange={(nextValue) => {
+              setFormData((prev) => ({ ...prev, [field.key]: nextValue }));
+              setFieldErrors((prev) => {
+                const nextError = validateField(field, nextValue);
+                if (nextError) return { ...prev, [field.key]: nextError };
+                const { [field.key]: _removed, ...rest } = prev;
+                return rest;
+              });
+            }}
+          />
+          {hasError && (
+            <Typography
+              id={fieldHelperTextId}
+              role="alert"
+              sx={{ color: "#b3261e", fontSize: 13, mt: 1 }}
+            >
+              {errorMessage}
+            </Typography>
+          )}
+        </>
+      );
+    }
+
     const commonProps = {
       id: field.key,
       name: field.key,
@@ -321,11 +366,13 @@ export function RegistrationForm({
           }}
         >
           <MenuItem value="">Seleziona...</MenuItem>
-          {field.options.map((option) => (
-            <MenuItem key={option} value={option}>
-              {option}
-            </MenuItem>
-          ))}
+          {field.options
+            .filter((option): option is string => typeof option === "string")
+            .map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
         </TextField>
       );
     }

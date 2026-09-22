@@ -6,6 +6,8 @@ import { AdminFormContentManager } from "@/components/AdminFormContentManager";
 import AdminSliderManager from "@/components/AdminSliderManager";
 import { AdminRegistrationsTable } from "@/components/AdminRegistrationsTable";
 import { AdminRulesManager } from "@/components/AdminRulesManager";
+import { AdminLabCapacityManager } from "@/components/AdminLabCapacityManager";
+import { AdminCustomCssManager } from "@/components/AdminCustomCssManager";
 import type {
   FormConfig,
   RegistrationField,
@@ -21,9 +23,24 @@ type Props = {
   capacity: number;
   maxParticipants: number;
   registrationsCloseAt: string | null;
+  supportsLabCapacity: boolean;
+  labCapacityEnabled: boolean;
 };
 
-type TabKey = "participants" | "fields" | "contents" | "slides" | "rules";
+type TabKey =
+  | "participants"
+  | "fields"
+  | "contents"
+  | "slides"
+  | "css"
+  | "rules"
+  | "labs";
+
+type DashboardTab = {
+  key: TabKey;
+  label: string;
+  meta: string;
+};
 
 export function AdminDashboardTabs({
   formId,
@@ -33,41 +50,74 @@ export function AdminDashboardTabs({
   capacity,
   maxParticipants,
   registrationsCloseAt,
+  supportsLabCapacity,
+  labCapacityEnabled,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>("participants");
+  const [isLabCapacityEnabled, setIsLabCapacityEnabled] = useState(
+    labCapacityEnabled,
+  );
+  const [customCss, setCustomCss] = useState(form.custom_css ?? "");
+  const [customCssEnabled, setCustomCssEnabled] = useState(
+    form.custom_css_enabled ?? false,
+  );
   const waitlistCount = registrations.filter(
     (registration) => registration.status === "waitlist",
   ).length;
 
-  const tabs = useMemo(
-    () => [
+  const tabs = useMemo(() => {
+    const items: DashboardTab[] = [
       {
-        key: "participants" as const,
+        key: "participants",
         label: "Partecipanti",
         meta: `${registrations.length}`,
       },
-      { key: "fields" as const, label: "Campi", meta: `${fields.length}` },
+      { key: "fields", label: "Campi", meta: `${fields.length}` },
       {
-        key: "contents" as const,
+        key: "contents",
         label: "Contenuti",
         meta: "testi",
       },
       {
-        key: "slides" as const,
+        key: "slides",
         label: "Slide",
         meta: `${form.slider_data?.length || 0}`,
       },
       {
-        key: "rules" as const,
-        label: "Regole",
-        meta: waitlistCount > 0 ? `${waitlistCount} attesa` : "ok",
+        key: "css",
+        label: "Style",
+        meta: customCssEnabled ? "attivo" : "off",
       },
-    ],
+      {
+        key: "rules",
+        label: "Regole",
+        meta:
+          isLabCapacityEnabled && waitlistCount > 0
+            ? `${waitlistCount} attesa`
+            : "ok",
+      },
+    ];
+
+    if (supportsLabCapacity) {
+      items.push({
+        key: "labs",
+        label: "Laboratori",
+        meta: isLabCapacityEnabled ? `${capacity}` : "off",
+      });
+    }
+
+    return items;
+  },
     [
+      capacity,
       fields.length,
+      isLabCapacityEnabled,
       registrations.length,
       waitlistCount,
       form.slider_data?.length,
+      customCss,
+      customCssEnabled,
+      supportsLabCapacity,
     ],
   );
 
@@ -95,7 +145,11 @@ export function AdminDashboardTabs({
             Pannello gestione
           </Typography>
           <Chip
-            label={`Capienza: ${capacity}`}
+            label={
+              isLabCapacityEnabled
+                ? `Capienza laboratori: ${capacity}`
+                : `Limite iscrizioni: ${maxParticipants}`
+            }
             variant="outlined"
             size="small"
             sx={{
@@ -174,6 +228,7 @@ export function AdminDashboardTabs({
           <AdminRegistrationsTable
             registrations={registrations}
             capacity={capacity}
+            showLabMetrics={isLabCapacityEnabled}
           />
         )}
 
@@ -194,13 +249,33 @@ export function AdminDashboardTabs({
           />
         )}
 
+        {activeTab === "css" && (
+          <AdminCustomCssManager
+            formId={formId}
+            initialCss={customCss}
+            initialEnabled={customCssEnabled}
+            onSaved={(nextCss, enabled) => {
+              setCustomCss(nextCss);
+              setCustomCssEnabled(enabled);
+            }}
+          />
+        )}
+
         {activeTab === "rules" && (
           <AdminRulesManager
             formId={formId}
-            initialLabCapacity={capacity}
             initialMaxParticipants={maxParticipants}
             initialRegistrationsCloseAt={registrationsCloseAt}
             totalRegistrations={registrations.length}
+          />
+        )}
+
+        {activeTab === "labs" && supportsLabCapacity && (
+          <AdminLabCapacityManager
+            formId={formId}
+            initialCapacity={capacity}
+            initialEnabled={isLabCapacityEnabled}
+            onEnabledChange={setIsLabCapacityEnabled}
             confirmedLabChildren={registrations
               .filter((registration) => registration.status === "confirmed")
               .reduce(
