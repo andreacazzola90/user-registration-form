@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
+import { recordSecurityEvent } from "@/lib/security";
 
 const createSchema = z.object({
   form_id: z.string().uuid(),
@@ -94,6 +95,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: error.message }, { status: 400 });
     }
 
+    await recordSecurityEvent(request, "admin_field_created", email, {
+      formId: body.form_id,
+      fieldId: data.id,
+    });
     return NextResponse.json({ message: "Campo creato", field: data });
   } catch {
     return NextResponse.json(
@@ -130,6 +135,10 @@ export async function PUT(request: Request) {
       return NextResponse.json({ message: error.message }, { status: 400 });
     }
 
+    await recordSecurityEvent(request, "admin_field_updated", email, {
+      fieldId: body.id,
+      fieldType: body.field_type,
+    });
     return NextResponse.json({ message: "Campo aggiornato" });
   } catch {
     return NextResponse.json(
@@ -183,6 +192,10 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ message: error.message }, { status: 400 });
     }
 
+    await recordSecurityEvent(request, "admin_field_deleted", email, {
+      formId,
+      fieldId,
+    });
     return NextResponse.json({ message: "Campo eliminato" });
   } catch {
     return NextResponse.json(

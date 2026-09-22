@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AdminDashboardClient } from "@/components/AdminDashboardClient";
 import { AdminFormsManager } from "@/components/AdminFormsManager";
+import { AdminSecurityManager } from "@/components/AdminSecurityManager";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminEmail } from "@/lib/admin-session";
 import type { FormConfig } from "@/lib/types";
@@ -63,6 +64,7 @@ export default async function AdminDashboardPage() {
         </Box>
 
         <AdminFormsManager initialForms={data.forms} />
+        <AdminSecurityManager />
       </Box>
     </AdminDashboardClient>
   );

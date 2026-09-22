@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
+import { escapeCsvValue } from "@/lib/spreadsheet";
+import { recordSecurityEvent } from "@/lib/security";
 
 export async function GET(request: Request) {
   const email = await getAdminEmail();
   if (!email) return unauthorizedResponse();
 
-  const supabase = createSupabaseAdminClient();  const { searchParams } = new URL(request.url);
+  const supabase = createSupabaseAdminClient();
+  const { searchParams } = new URL(request.url);
   const formId = searchParams.get("form_id");
 
   let query = supabase
@@ -54,18 +57,21 @@ export async function GET(request: Request) {
         row.adults,
         row.status,
       ]
-        .map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`)
+        .map(escapeCsvValue)
         .join(","),
     ),
   ];
 
   const csv = csvRows.join("\n");
 
+  await recordSecurityEvent(request, "admin_csv_exported", email, { formId });
+
   return new NextResponse(csv, {
     status: 200,
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="iscrizioni-${new Date().toISOString().slice(0, 10)}.csv"`,
+      "Cache-Control": "private, no-store",
     },
   });
 }

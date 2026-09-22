@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
+import { recordSecurityEvent } from "@/lib/security";
 
 const updateSettingsSchema = z.object({
   form_id: z.string().uuid(),
@@ -105,6 +106,10 @@ export async function PUT(request: Request) {
         );
       }
 
+      await recordSecurityEvent(request, "admin_settings_created", email, {
+        formId: body.form_id,
+        changedKeys: Object.keys(body).filter((key) => key !== "form_id"),
+      });
       return NextResponse.json({ message: "Regole aggiornate" });
     }
 
@@ -134,6 +139,10 @@ export async function PUT(request: Request) {
       );
     }
 
+    await recordSecurityEvent(request, "admin_settings_updated", email, {
+      formId: body.form_id,
+      changedKeys: Object.keys(body).filter((key) => key !== "form_id"),
+    });
     return NextResponse.json({ message: "Regole aggiornate" });
   } catch {
     return NextResponse.json(

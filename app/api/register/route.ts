@@ -12,6 +12,7 @@ import {
   formatTicketSelection,
   normalizeTicketSelection,
 } from "@/lib/tickets";
+import { consumeRateLimit } from "@/lib/security";
 
 const payloadSchema = z
   .object({
@@ -45,6 +46,21 @@ export async function POST(request: Request) {
       await request.json(),
     );
     const payload = rest as Record<string, string | number>;
+
+    const allowed = await consumeRateLimit(
+      request,
+      "registration-create",
+      formId,
+      10,
+      60 * 60,
+    );
+    if (!allowed) {
+      return NextResponse.json(
+        { message: "Troppe richieste. Riprova più tardi." },
+        { status: 429, headers: { "Retry-After": "3600" } },
+      );
+    }
+
     const supabase = createSupabaseAdminClient();
 
     const { data: fields, error: fieldsError } = await supabase

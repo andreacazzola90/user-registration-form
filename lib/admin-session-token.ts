@@ -1,6 +1,7 @@
 const TOKEN_VERSION = 1;
 
 type AdminSessionPayload = {
+  sessionId: string;
   email: string;
   exp: number;
   version: number;
@@ -46,8 +47,13 @@ async function sign(payloadPart: string) {
   return toBase64Url(String.fromCharCode(...new Uint8Array(signature)));
 }
 
-export async function createAdminSessionToken(email: string, maxAge: number) {
+export async function createAdminSessionToken(
+  sessionId: string,
+  email: string,
+  maxAge: number,
+) {
   const payload: AdminSessionPayload = {
+    sessionId,
     email: email.trim().toLowerCase(),
     exp: Date.now() + maxAge * 1000,
     version: TOKEN_VERSION,
@@ -74,13 +80,14 @@ export async function verifyAdminSessionToken(token: string) {
     const payload = JSON.parse(fromBase64Url(payloadPart)) as AdminSessionPayload;
     if (
       payload.version !== TOKEN_VERSION ||
+      !payload.sessionId ||
       !payload.email ||
       typeof payload.exp !== "number" ||
       payload.exp <= Date.now()
     ) {
       return null;
     }
-    return payload.email;
+    return { sessionId: payload.sessionId, email: payload.email };
   } catch {
     return null;
   }

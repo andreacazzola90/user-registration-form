@@ -1,7 +1,10 @@
 "use client";
 
-import { Box, ThemeProvider, createTheme } from "@mui/material";
-import type React from "react";
+import { useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import LogoutIcon from "@mui/icons-material/Logout";
+import DevicesIcon from "@mui/icons-material/Devices";
+import { Box, Button, Stack, ThemeProvider, createTheme } from "@mui/material";
 
 const adminTheme = createTheme({
   palette: {
@@ -17,10 +20,26 @@ const adminTheme = createTheme({
 });
 
 type Props = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 export function AdminDashboardClient({ children }: Props) {
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function logout(allSessions: boolean) {
+    setLoggingOut(true);
+    try {
+      await fetch(`/api/admin/logout${allSessions ? "?all=true" : ""}`, {
+        method: "POST",
+      });
+      router.replace("/admin/login");
+      router.refresh();
+    } finally {
+      setLoggingOut(false);
+    }
+  }
+
   return (
     <ThemeProvider theme={adminTheme}>
       <Box
@@ -31,6 +50,30 @@ export function AdminDashboardClient({ children }: Props) {
           px: { xs: 1, sm: 2 },
         }}
       >
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{ maxWidth: 1400, mx: "auto", mb: 2, justifyContent: "flex-end" }}
+        >
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<DevicesIcon />}
+            disabled={loggingOut}
+            onClick={() => logout(true)}
+          >
+            Disconnetti tutti
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<LogoutIcon />}
+            disabled={loggingOut}
+            onClick={() => logout(false)}
+          >
+            Esci
+          </Button>
+        </Stack>
         {children}
       </Box>
     </ThemeProvider>

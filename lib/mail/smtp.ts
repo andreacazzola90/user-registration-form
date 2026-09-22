@@ -268,3 +268,25 @@ export async function sendRegistrationRecapEmail(
   console.log("[SMTP] Email inviata con successo. MessageId:", info.messageId);
   return true;
 }
+
+export async function sendAdminLoginCodeEmail(to: string, code: string) {
+  const config = getSmtpConfig();
+  if (!config) return false;
+
+  const transporter = nodemailer.createTransport({
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    auth: { user: config.user, pass: config.password },
+  });
+
+  await transporter.sendMail({
+    from: `${config.fromName} <${config.fromEmail}>`,
+    to,
+    subject: "Codice di accesso amministratore",
+    text: `Il tuo codice di accesso e: ${code}\n\nScade tra 10 minuti. Se non hai richiesto tu l'accesso, ignora questa email.`,
+    html: `<p>Il tuo codice di accesso è:</p><p style="font-size:28px;font-weight:700;letter-spacing:6px">${escapeHtml(code)}</p><p>Scade tra 10 minuti. Se non hai richiesto tu l'accesso, ignora questa email.</p>`,
+  });
+
+  return true;
+}

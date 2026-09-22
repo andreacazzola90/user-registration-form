@@ -31,6 +31,8 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [challengeId, setChallengeId] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -43,12 +45,25 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(
+          challengeId ? { challengeId, code } : { email, password },
+        ),
       });
 
+      const data = (await res.json()) as {
+        message?: string;
+        requiresMfa?: boolean;
+        challengeId?: string;
+      };
+
       if (!res.ok) {
-        const data = await res.json();
         setError(data.message ?? "Credenziali non valide");
+        return;
+      }
+
+      if (data.requiresMfa && data.challengeId) {
+        setChallengeId(data.challengeId);
+        setPassword("");
         return;
       }
 
@@ -113,29 +128,51 @@ export default function AdminLoginPage() {
             <Box sx={{ p: 3.5 }}>
               <form onSubmit={handleSubmit}>
                 <Stack spacing={3}>
-                  <TextField
-                    id="email"
-                    type="email"
-                    label="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    fullWidth
-                    size="small"
-                    variant="outlined"
-                  />
+                  {challengeId ? (
+                    <>
+                      <Alert severity="info">
+                        Inserisci il codice di 6 cifre inviato via email.
+                      </Alert>
+                      <TextField
+                        id="code"
+                        label="Codice di verifica"
+                        value={code}
+                        onChange={(event) =>
+                          setCode(event.target.value.replace(/\D/g, "").slice(0, 6))
+                        }
+                        required
+                        fullWidth
+                        autoFocus
+                        slotProps={{ htmlInput: { inputMode: "numeric" } }}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <TextField
+                        id="email"
+                        type="email"
+                        label="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        fullWidth
+                        size="small"
+                        variant="outlined"
+                      />
 
-                  <TextField
-                    id="password"
-                    type="password"
-                    label="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    fullWidth
-                    size="small"
-                    variant="outlined"
-                  />
+                      <TextField
+                        id="password"
+                        type="password"
+                        label="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        fullWidth
+                        size="small"
+                        variant="outlined"
+                      />
+                    </>
+                  )}
 
                   <Button
                     type="submit"
@@ -150,8 +187,25 @@ export default function AdminLoginPage() {
                       py: 1.2,
                     }}
                   >
-                    {loading ? "Accesso..." : "Sign In"}
+                    {loading
+                      ? "Verifica..."
+                      : challengeId
+                        ? "Verifica codice"
+                        : "Sign In"}
                   </Button>
+
+                  {challengeId && (
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setChallengeId("");
+                        setCode("");
+                        setError(null);
+                      }}
+                    >
+                      Torna al login
+                    </Button>
+                  )}
 
                   {error && <Alert severity="error">{error}</Alert>}
                 </Stack>

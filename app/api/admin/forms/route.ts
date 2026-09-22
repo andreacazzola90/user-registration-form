@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { DEFAULT_REGISTRATION_FIELDS } from "@/lib/default-fields";
 import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
+import { recordSecurityEvent } from "@/lib/security";
 
 const createFormSchema = z.object({
   slug: z
@@ -142,6 +143,10 @@ export async function POST(request: Request) {
       );
     }
 
+    await recordSecurityEvent(request, "admin_form_created", email, {
+      formId: form.id,
+      slug: form.slug,
+    });
     return NextResponse.json({ message: "Form creato", form }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -187,6 +192,9 @@ export async function PUT(request: Request) {
       return NextResponse.json({ message: error.message }, { status: 400 });
     }
 
+    await recordSecurityEvent(request, "admin_form_content_updated", email, {
+      formId: body.id,
+    });
     return NextResponse.json({ message: "Contenuti aggiornati" });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -226,6 +234,11 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ message: error.message }, { status: 400 });
     }
 
+    await recordSecurityEvent(request, "admin_form_style_updated", email, {
+      formId: body.id,
+      enabled: body.custom_css_enabled,
+      cssLength: body.custom_css.length,
+    });
     return NextResponse.json({ message: "CSS personalizzato aggiornato" });
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -2,12 +2,15 @@ import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
+import { safeSpreadsheetValue } from "@/lib/spreadsheet";
+import { recordSecurityEvent } from "@/lib/security";
 
 export async function GET(request: Request) {
   const email = await getAdminEmail();
   if (!email) return unauthorizedResponse();
 
-  const supabase = createSupabaseAdminClient();  const { searchParams } = new URL(request.url);
+  const supabase = createSupabaseAdminClient();
+  const { searchParams } = new URL(request.url);
   const formId = searchParams.get("form_id");
 
   let query = supabase
@@ -48,6 +51,11 @@ export async function GET(request: Request) {
     detailSheet.addRow({
       ...row,
       created_at: new Date(row.created_at).toLocaleString("it-IT"),
+      first_name: safeSpreadsheetValue(row.first_name),
+      last_name: safeSpreadsheetValue(row.last_name),
+      phone: safeSpreadsheetValue(row.phone),
+      email: safeSpreadsheetValue(row.email),
+      country: safeSpreadsheetValue(row.country),
     });
   });
 
@@ -79,12 +87,15 @@ export async function GET(request: Request) {
 
   const buffer = await workbook.xlsx.writeBuffer();
 
+  await recordSecurityEvent(request, "admin_xlsx_exported", email, { formId });
+
   return new NextResponse(buffer as BodyInit, {
     status: 200,
     headers: {
       "Content-Type":
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="iscrizioni-${new Date().toISOString().slice(0, 10)}.xlsx"`,
+      "Cache-Control": "private, no-store",
     },
   });
 }

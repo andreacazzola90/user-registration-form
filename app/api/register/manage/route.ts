@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyRegistrationManageToken } from "@/lib/registration-manage-token";
 import type { RegistrationField, TicketOption } from "@/lib/types";
 import { normalizeTicketSelection } from "@/lib/tickets";
+import { consumeRateLimit } from "@/lib/security";
 
 const KNOWN_KEYS = new Set([
   "first_name",
@@ -96,6 +97,13 @@ export async function GET(request: Request) {
     );
   }
 
+  if (!(await consumeRateLimit(request, "registration-manage", id, 30, 900))) {
+    return NextResponse.json(
+      { message: "Troppe richieste. Riprova più tardi." },
+      { status: 429, headers: { "Retry-After": "900" } },
+    );
+  }
+
   try {
     const supabase = createSupabaseAdminClient();
 
@@ -150,6 +158,20 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = managePayloadSchema.parse(await request.json());
+    if (
+      !(await consumeRateLimit(
+        request,
+        "registration-manage",
+        body.id,
+        30,
+        900,
+      ))
+    ) {
+      return NextResponse.json(
+        { message: "Troppe richieste. Riprova più tardi." },
+        { status: 429, headers: { "Retry-After": "900" } },
+      );
+    }
     const supabase = createSupabaseAdminClient();
 
     const authResult = await getAuthorizedRegistration(
@@ -263,6 +285,20 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const body = deletePayloadSchema.parse(await request.json());
+    if (
+      !(await consumeRateLimit(
+        request,
+        "registration-manage",
+        body.id,
+        30,
+        900,
+      ))
+    ) {
+      return NextResponse.json(
+        { message: "Troppe richieste. Riprova più tardi." },
+        { status: 429, headers: { "Retry-After": "900" } },
+      );
+    }
     const supabase = createSupabaseAdminClient();
 
     const authResult = await getAuthorizedRegistration(
