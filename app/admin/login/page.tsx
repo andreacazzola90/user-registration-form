@@ -143,6 +143,7 @@ export default function AdminLoginPage() {
                         required
                         fullWidth
                         autoFocus
+                        autoComplete="one-time-code"
                         slotProps={{ htmlInput: { inputMode: "numeric" } }}
                       />
                     </>
@@ -156,6 +157,7 @@ export default function AdminLoginPage() {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         fullWidth
+                        autoComplete="username"
                         size="small"
                         variant="outlined"
                       />
@@ -168,6 +170,7 @@ export default function AdminLoginPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         fullWidth
+                        autoComplete="current-password"
                         size="small"
                         variant="outlined"
                       />

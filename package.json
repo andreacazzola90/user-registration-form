@@ -10,6 +10,7 @@
     "lint": "next lint",
     "migrate:init": "node scripts/migrate-init.mjs",
     "seed:admin": "node scripts/seed-admin.mjs",
+    "admin:reset-password": "node scripts/reset-admin-password.mjs",
     "seed:tables": "node scripts/seed-tables.mjs",
     "seed:all": "npm run migrate:init && npm run seed:tables && npm run seed:admin"
   },
