@@ -9,14 +9,12 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey =
     process.env.SECRET_SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_SERVICE_ROLE_KEY;
-const adminEmail = process.env.ADMIN_EMAIL || "andracazzola90@gmail.com";
-const adminPassword =
-    process.env.ADMIN_PASSWORD ||
-    "REMOVED_SECRET";
+const adminEmail = process.env.ADMIN_EMAIL;
+const adminPassword = process.env.ADMIN_PASSWORD;
 
-if (!supabaseUrl || !serviceRoleKey) {
+if (!supabaseUrl || !serviceRoleKey || !adminEmail || !adminPassword) {
     console.error(
-        "Missing NEXT_PUBLIC_SUPABASE_URL or SECRET_SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_ROLE_KEY)",
+        "Missing NEXT_PUBLIC_SUPABASE_URL, service role key, ADMIN_EMAIL, or ADMIN_PASSWORD",
     );
     process.exit(1);
 }
@@ -29,24 +27,26 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 });
 
 async function seedAdmin() {
-    const { data: usersData, error: listError } = await supabase.auth.admin.listUsers();
+    const { data: existing, error: listError } = await supabase
+        .from("users")
+        .select("email")
+        .eq("email", adminEmail.toLowerCase().trim())
+        .maybeSingle();
 
     if (listError) {
         console.error("Cannot list users:", listError.message);
         process.exit(1);
     }
 
-    const existing = usersData.users.find((user) => user.email === adminEmail);
-
     if (existing) {
         console.log(`Admin already exists: ${adminEmail}`);
         return;
     }
 
-    const { error: createError } = await supabase.auth.admin.createUser({
-        email: adminEmail,
-        password: adminPassword,
-        email_confirm: true,
+    const { error: createError } = await supabase.rpc("create_user_with_password", {
+        p_email: adminEmail,
+        p_password: adminPassword,
+        p_full_name: "Admin",
     });
 
     if (createError) {

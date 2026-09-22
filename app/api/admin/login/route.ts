@@ -4,6 +4,7 @@ import {
   SESSION_COOKIE_NAME,
   SESSION_COOKIE_MAX_AGE,
 } from "@/lib/admin-session";
+import { createAdminSessionToken } from "@/lib/admin-session-token";
 
 export async function POST(request: Request) {
   try {
@@ -19,15 +20,12 @@ export async function POST(request: Request) {
     }
 
     const supabase = createSupabaseAdminClient();
-    const { data, error } = await supabase
-      .from("users")
-      .select("email, is_active")
-      .eq("email", email)
-      .eq("password", password)
-      .eq("is_active", true)
-      .maybeSingle();
+    const { data, error } = await supabase.rpc("verify_user_password", {
+      p_email: email,
+      p_password: password,
+    });
 
-    if (error || !data) {
+    if (error || data !== true) {
       return NextResponse.json(
         { message: "Credenziali non valide" },
         { status: 401 },
@@ -35,7 +33,11 @@ export async function POST(request: Request) {
     }
 
     const response = NextResponse.json({ message: "Login effettuato" });
-    response.cookies.set(SESSION_COOKIE_NAME, data.email, {
+    const sessionToken = await createAdminSessionToken(
+      email,
+      SESSION_COOKIE_MAX_AGE,
+    );
+    response.cookies.set(SESSION_COOKIE_NAME, sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

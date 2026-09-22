@@ -1,38 +1,17 @@
 create extension if not exists pgcrypto;
 
-create table if not exists public.users (
-  id uuid primary key default gen_random_uuid(),
-  email text not null unique,
-  password_hash text not null,
-  full_name text,
-  is_active boolean not null default true,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint users_email_format_check check (
-    email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
-  )
-);
+alter table public.users
+  add column if not exists password_hash text;
 
-create or replace function public.set_users_updated_at()
-returns trigger
-language plpgsql
-as $$
-begin
-  new.updated_at := now();
-  return new;
-end;
-$$;
+update public.users
+set password_hash = extensions.crypt(password, extensions.gen_salt('bf', 12))
+where password_hash is null;
 
-drop trigger if exists users_set_updated_at on public.users;
-create trigger users_set_updated_at
-before update on public.users
-for each row
-execute function public.set_users_updated_at();
+alter table public.users
+  alter column password_hash set not null;
 
-alter table public.users enable row level security;
-
--- Nessuna policy pubblica: la gestione utenti deve avvenire con service role
--- oppure direttamente dal SQL editor/dashboard Supabase.
+alter table public.users
+  drop column if exists password;
 
 create or replace function public.verify_user_password(
   p_email text,
@@ -68,11 +47,10 @@ begin
   insert into public.users (email, password_hash, full_name)
   values (
     lower(trim(p_email)),
-    extensions.crypt(p_password, extensions.gen_salt('bf', 10)),
+    extensions.crypt(p_password, extensions.gen_salt('bf', 12)),
     p_full_name
   )
   returning * into v_user;
-
   return v_user;
 end;
 $$;
@@ -90,14 +68,27 @@ declare
   v_count integer;
 begin
   update public.users
-  set password_hash = extensions.crypt(p_new_password, extensions.gen_salt('bf', 10))
+  set password_hash = extensions.crypt(
+    p_new_password,
+    extensions.gen_salt('bf', 12)
+  )
   where lower(email) = lower(p_email)
     and is_active = true;
-
   get diagnostics v_count = row_count;
   return v_count > 0;
 end;
 $$;
 
--- Create the first administrator with scripts/seed-admin.mjs and credentials
--- supplied only through local environment variables.
+revoke all on function public.verify_user_password(text, text)
+  from public, anon, authenticated;
+revoke all on function public.create_user_with_password(text, text, text)
+  from public, anon, authenticated;
+revoke all on function public.update_user_password(text, text)
+  from public, anon, authenticated;
+
+grant execute on function public.verify_user_password(text, text)
+  to service_role;
+grant execute on function public.create_user_with_password(text, text, text)
+  to service_role;
+grant execute on function public.update_user_password(text, text)
+  to service_role;

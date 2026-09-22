@@ -29,8 +29,8 @@ const adminTheme = createTheme({
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("andracazzola90@gmail.com");
-  const [password, setPassword] = useState("REMOVED_SECRET");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
