@@ -86,3 +86,23 @@ export function formatTicketSelection(value: unknown) {
     return "";
   }
 }
+
+/** Parses an additional_data ticket value (JSON string or object) back into its selection, if any. */
+export function parseStoredTicketSelection(
+  value: unknown,
+): TicketSelection | null {
+  try {
+    const parsed = typeof value === "string" ? JSON.parse(value) : value;
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      !Array.isArray((parsed as TicketSelection).items)
+    ) {
+      return null;
+    }
+
+    return parsed as TicketSelection;
+  } catch {
+    return null;
+  }
+}

@@ -8,12 +8,17 @@ import { AdminRegistrationsTable } from "@/components/AdminRegistrationsTable";
 import { AdminRulesManager } from "@/components/AdminRulesManager";
 import { AdminLabCapacityManager } from "@/components/AdminLabCapacityManager";
 import { AdminCustomCssManager } from "@/components/AdminCustomCssManager";
+import { AdminColumnsManager } from "@/components/AdminColumnsManager";
+import { AdminSummaryCardsManager } from "@/components/AdminSummaryCardsManager";
+import { resolveDisplayColumns } from "@/lib/registration-columns";
 import type {
+  DisplayColumnSetting,
   FormConfig,
   RegistrationField,
   RegistrationRecord,
+  SummaryCardConfig,
 } from "@/lib/types";
-import { Box, Tabs, Tab, Paper, Stack, Typography, Chip } from "@mui/material";
+import { Box, Tabs, Tab, Paper, Stack, Typography, Chip, Divider } from "@mui/material";
 
 type Props = {
   formId: string;
@@ -29,6 +34,7 @@ type Props = {
 
 type TabKey =
   | "participants"
+  | "columns"
   | "fields"
   | "contents"
   | "slides"
@@ -61,9 +67,23 @@ export function AdminDashboardTabs({
   const [customCssEnabled, setCustomCssEnabled] = useState(
     form.custom_css_enabled ?? false,
   );
+  const [displaySettings, setDisplaySettings] = useState<
+    DisplayColumnSetting[] | null
+  >(form.table_display_settings ?? null);
+  const [summaryCards, setSummaryCards] = useState<
+    SummaryCardConfig[] | null
+  >(form.summary_cards ?? null);
   const waitlistCount = registrations.filter(
     (registration) => registration.status === "waitlist",
   ).length;
+
+  const resolvedColumns = useMemo(
+    () =>
+      resolveDisplayColumns(fields, displaySettings, {
+        includeLabColumns: supportsLabCapacity,
+      }),
+    [fields, displaySettings, supportsLabCapacity],
+  );
 
   const tabs = useMemo(() => {
     const items: DashboardTab[] = [
@@ -71,6 +91,11 @@ export function AdminDashboardTabs({
         key: "participants",
         label: "Partecipanti",
         meta: `${registrations.length}`,
+      },
+      {
+        key: "columns",
+        label: "Visualizzazione",
+        meta: `${resolvedColumns.length} col.`,
       },
       { key: "fields", label: "Campi", meta: `${fields.length}` },
       {
@@ -118,6 +143,7 @@ export function AdminDashboardTabs({
       customCss,
       customCssEnabled,
       supportsLabCapacity,
+      resolvedColumns.length,
     ],
   );
 
@@ -229,7 +255,30 @@ export function AdminDashboardTabs({
             registrations={registrations}
             capacity={capacity}
             showLabMetrics={isLabCapacityEnabled}
+            fields={fields}
+            columns={resolvedColumns}
+            summaryCards={summaryCards}
           />
+        )}
+
+        {activeTab === "columns" && (
+          <Stack spacing={4}>
+            <AdminColumnsManager
+              formId={formId}
+              fields={fields}
+              initialSettings={displaySettings}
+              supportsLabCapacity={supportsLabCapacity}
+              onSaved={setDisplaySettings}
+            />
+            <Divider />
+            <AdminSummaryCardsManager
+              formId={formId}
+              fields={fields}
+              initialCards={summaryCards}
+              supportsLabCapacity={supportsLabCapacity}
+              onSaved={setSummaryCards}
+            />
+          </Stack>
         )}
 
         {activeTab === "fields" && (

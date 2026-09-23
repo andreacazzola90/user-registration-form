@@ -3,10 +3,16 @@ import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
 import { recordSecurityEvent } from "@/lib/security";
+import { RESERVED_STANDARD_KEYS } from "@/lib/registration-columns";
 
 const createSchema = z.object({
   form_id: z.string().uuid(),
-  key: z.string().min(2),
+  key: z
+    .string()
+    .min(2)
+    .refine((key) => !RESERVED_STANDARD_KEYS.includes(key), {
+      message: `Chiave riservata ai campi standard (${RESERVED_STANDARD_KEYS.join(", ")}): scegline un'altra`,
+    }),
   label: z.string().min(2),
 });
 
@@ -100,7 +106,14 @@ export async function POST(request: Request) {
       fieldId: data.id,
     });
     return NextResponse.json({ message: "Campo creato", field: data });
-  } catch {
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const firstIssue = error.issues[0];
+      return NextResponse.json(
+        { message: firstIssue?.message ?? "Payload non valido" },
+        { status: 400 },
+      );
+    }
     return NextResponse.json(
       { message: "Payload non valido" },
       { status: 400 },

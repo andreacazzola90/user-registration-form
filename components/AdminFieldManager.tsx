@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { RegistrationField, TicketOption } from "@/lib/types";
+import { RESERVED_STANDARD_KEYS } from "@/lib/registration-columns";
 import {
   Box,
   Stack,
@@ -17,6 +18,9 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import IconButton from "@mui/material/IconButton";
 
 type Props = {
   formId: string;
@@ -128,11 +132,44 @@ export function AdminFieldManager({ formId, initialFields }: Props) {
     setStatus(data.message);
   }
 
+  async function moveField(index: number, direction: -1 | 1) {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= fields.length) return;
+
+    const current = fields[index];
+    const target = fields[targetIndex];
+    const swapped = {
+      current: { ...current, sort_order: target.sort_order },
+      target: { ...target, sort_order: current.sort_order },
+    };
+
+    setFields((prev) => {
+      const next = [...prev];
+      next[index] = swapped.target;
+      next[targetIndex] = swapped.current;
+      return next.sort((a, b) => a.sort_order - b.sort_order);
+    });
+
+    setStatus(null);
+    await Promise.all([
+      saveField(swapped.current),
+      saveField(swapped.target),
+    ]);
+    setStatus("Ordine aggiornato");
+  }
+
   async function addField() {
     const key = window.prompt("Chiave campo (es. municipality)");
     const label = window.prompt("Etichetta campo");
 
     if (!key || !label) {
+      return;
+    }
+
+    if (RESERVED_STANDARD_KEYS.includes(key)) {
+      setStatus(
+        `Chiave riservata ai campi standard (${RESERVED_STANDARD_KEYS.join(", ")}): scegline un'altra`,
+      );
       return;
     }
 
@@ -218,9 +255,35 @@ export function AdminFieldManager({ formId, initialFields }: Props) {
           >
             <CardContent sx={{ p: 2.5 }}>
               <Stack spacing={2.5}>
-                <Typography sx={{ fontSize: 14, color: "#2d3943" }}>
-                  Chiave: <strong>{field.key}</strong>
-                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography sx={{ fontSize: 14, color: "#2d3943" }}>
+                    Chiave: <strong>{field.key}</strong>
+                  </Typography>
+                  <Stack direction="row" spacing={0.5}>
+                    <IconButton
+                      size="small"
+                      disabled={index === 0}
+                      onClick={() => moveField(index, -1)}
+                      aria-label={`Sposta su ${field.label}`}
+                    >
+                      <ArrowUpwardIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      disabled={index === fields.length - 1}
+                      onClick={() => moveField(index, 1)}
+                      aria-label={`Sposta giù ${field.label}`}
+                    >
+                      <ArrowDownwardIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
+                </Box>
 
                 <Box
                   sx={{

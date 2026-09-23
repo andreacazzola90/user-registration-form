@@ -1,6 +1,18 @@
 "use client";
 
-import type { RegistrationRecord, SummaryStats } from "@/lib/types";
+import type {
+  RegistrationField,
+  RegistrationRecord,
+  SummaryCardConfig,
+  SummaryStats,
+} from "@/lib/types";
+import {
+  getColumnValue,
+  getTicketRows,
+  type ResolvedColumn,
+  type TicketRow,
+} from "@/lib/registration-columns";
+import { computeSummaryCardValue } from "@/lib/summary-cards";
 import {
   Box,
   Paper,
@@ -22,6 +34,9 @@ type Props = {
   registrations: RegistrationRecord[];
   capacity: number;
   showLabMetrics: boolean;
+  fields: RegistrationField[];
+  columns: ResolvedColumn[];
+  summaryCards: SummaryCardConfig[] | null;
 };
 
 function computeSummary(
@@ -51,16 +66,88 @@ function computeSummary(
   };
 }
 
+function StatusChip({ registration }: { registration: RegistrationRecord }) {
+  return (
+    <Chip
+      label={registration.status === "confirmed" ? "Confermato" : "Attesa"}
+      size="small"
+      color={registration.status === "confirmed" ? "success" : "warning"}
+      variant="filled"
+    />
+  );
+}
+
+function TicketBreakdown({ rows }: { rows: TicketRow[] }) {
+  return (
+    <Stack spacing={0} sx={{ minWidth: 220 }}>
+      {rows.map((row) => (
+        <Box
+          key={row.id}
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "28px 1fr auto auto",
+            alignItems: "center",
+            gap: 1,
+            py: 0.5,
+            borderBottom: "1px solid #eef2f6",
+            "&:last-of-type": { borderBottom: "none" },
+          }}
+        >
+          <Box
+            component="img"
+            src={row.imageUrl || undefined}
+            alt=""
+            sx={{
+              width: 28,
+              height: 28,
+              borderRadius: 0.5,
+              objectFit: "cover",
+              backgroundColor: "#eef2f6",
+            }}
+          />
+          <Typography sx={{ fontSize: 13, color: "#2d3943" }}>
+            {row.title}
+          </Typography>
+          <Typography
+            sx={{ fontSize: 12, color: "#62707c", whiteSpace: "nowrap" }}
+          >
+            {row.price.toFixed(2)} EUR
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: 12,
+              color: "#2d3943",
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+            }}
+          >
+            x{row.quantity}
+          </Typography>
+        </Box>
+      ))}
+    </Stack>
+  );
+}
+
 export function AdminRegistrationsTable({
   registrations,
   capacity,
   showLabMetrics,
+  fields,
+  columns,
+  summaryCards,
 }: Props) {
   const summary = computeSummary(registrations, capacity);
   const fillPercent =
     capacity > 0
       ? Math.min((summary.confirmedChildrenOver3Labs / capacity) * 100, 100)
       : 0;
+  const hasCustomCards = Boolean(summaryCards && summaryCards.length > 0);
+
+  const titleColumn = columns.find((column) => column.key !== "status");
+  const cardColumns = columns.filter(
+    (column) => column.key !== titleColumn?.key && column.key !== "status",
+  );
 
   return (
     <Stack spacing={3}>
@@ -75,47 +162,86 @@ export function AdminRegistrationsTable({
           gap: 2,
         }}
       >
-        <Card elevation={0} sx={{ border: "1px solid #d9dfe7" }}>
-          <CardContent sx={{ p: 2 }}>
-            <Typography
-              sx={{ fontSize: 12, color: "#485560", fontWeight: 700, mb: 1 }}
-            >
-              ISCRIZIONI
-            </Typography>
-            <Typography variant="h5" sx={{ color: "#2d3943" }}>
-              {summary.totalRegistrations}
-            </Typography>
-          </CardContent>
-        </Card>
+        {hasCustomCards ? (
+          summaryCards!.map((card) => (
+            <Card key={card.id} elevation={0} sx={{ border: "1px solid #d9dfe7" }}>
+              <CardContent sx={{ p: 2 }}>
+                <Typography
+                  sx={{
+                    fontSize: 12,
+                    color: "#485560",
+                    fontWeight: 700,
+                    mb: 1,
+                  }}
+                >
+                  {card.title.toUpperCase()}
+                </Typography>
+                <Typography variant="h5" sx={{ color: "#2d3943" }}>
+                  {computeSummaryCardValue(card, registrations)}
+                </Typography>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <>
+            <Card elevation={0} sx={{ border: "1px solid #d9dfe7" }}>
+              <CardContent sx={{ p: 2 }}>
+                <Typography
+                  sx={{
+                    fontSize: 12,
+                    color: "#485560",
+                    fontWeight: 700,
+                    mb: 1,
+                  }}
+                >
+                  ISCRIZIONI
+                </Typography>
+                <Typography variant="h5" sx={{ color: "#2d3943" }}>
+                  {summary.totalRegistrations}
+                </Typography>
+              </CardContent>
+            </Card>
 
-        {showLabMetrics && (
-          <Card elevation={0} sx={{ border: "1px solid #d9dfe7" }}>
-            <CardContent sx={{ p: 2 }}>
-              <Typography
-                sx={{ fontSize: 12, color: "#485560", fontWeight: 700, mb: 1 }}
-              >
-                BAMBINI LABORATORI
-              </Typography>
-              <Typography variant="h5" sx={{ color: "#2d3943" }}>
-                {summary.totalChildrenOver3Labs}
-              </Typography>
-            </CardContent>
-          </Card>
-        )}
+            {showLabMetrics && (
+              <Card elevation={0} sx={{ border: "1px solid #d9dfe7" }}>
+                <CardContent sx={{ p: 2 }}>
+                  <Typography
+                    sx={{
+                      fontSize: 12,
+                      color: "#485560",
+                      fontWeight: 700,
+                      mb: 1,
+                    }}
+                  >
+                    BAMBINI LABORATORI
+                  </Typography>
+                  <Typography variant="h5" sx={{ color: "#2d3943" }}>
+                    {summary.totalChildrenOver3Labs}
+                  </Typography>
+                </CardContent>
+              </Card>
+            )}
 
-        {showLabMetrics && (
-          <Card elevation={0} sx={{ border: "1px solid #d9dfe7" }}>
-            <CardContent sx={{ p: 2 }}>
-              <Typography
-                sx={{ fontSize: 12, color: "#485560", fontWeight: 700, mb: 1 }}
-              >
-                ADULTI
-              </Typography>
-              <Typography variant="h5" sx={{ color: "#2d3943" }}>
-                {summary.totalAdults}
-              </Typography>
-            </CardContent>
-          </Card>
+            {showLabMetrics && (
+              <Card elevation={0} sx={{ border: "1px solid #d9dfe7" }}>
+                <CardContent sx={{ p: 2 }}>
+                  <Typography
+                    sx={{
+                      fontSize: 12,
+                      color: "#485560",
+                      fontWeight: 700,
+                      mb: 1,
+                    }}
+                  >
+                    ADULTI
+                  </Typography>
+                  <Typography variant="h5" sx={{ color: "#2d3943" }}>
+                    {summary.totalAdults}
+                  </Typography>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
 
         {showLabMetrics && (
@@ -190,60 +316,15 @@ export function AdminRegistrationsTable({
                         borderBottom: "1px solid #dde3ea",
                       }}
                     >
-                      {showLabMetrics && <TableCell
-                        sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
-                      >
-                        Data
-                      </TableCell>}
-                      {showLabMetrics && <TableCell
-                        sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
-                      >
-                        Nome
-                      </TableCell>}
-                      {showLabMetrics && <TableCell
-                        sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
-                      >
-                        Cognome
-                      </TableCell>}
-                      <TableCell
-                        sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
-                      >
-                        Telefono
-                      </TableCell>
-                      <TableCell
-                        sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
-                      >
-                        Email
-                      </TableCell>
-                      <TableCell
-                        sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
-                      >
-                        Paese
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
-                      >
-                        Bimbi &lt;3
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
-                      >
-                        Bimbi &gt;3
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
-                      >
-                        Adulti
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
-                      >
-                        Stato
-                      </TableCell>
+                      {columns.map((column) => (
+                        <TableCell
+                          key={`${column.source}:${column.key}`}
+                          align={column.align}
+                          sx={{ fontWeight: 700, color: "#2d3943", py: 1.5 }}
+                        >
+                          {column.label}
+                        </TableCell>
+                      ))}
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -255,72 +336,30 @@ export function AdminRegistrationsTable({
                           "&:hover": { backgroundColor: "#f8fafc" },
                         }}
                       >
-                        {showLabMetrics && <TableCell
-                          sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
-                        >
-                          {new Date(registration.created_at).toLocaleString(
-                            "it-IT",
-                          )}
-                        </TableCell>}
-                        {showLabMetrics && <TableCell
-                          sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
-                        >
-                          {registration.first_name}
-                        </TableCell>}
-                        {showLabMetrics && <TableCell
-                          sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
-                        >
-                          {registration.last_name}
-                        </TableCell>}
-                        <TableCell
-                          sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
-                        >
-                          {registration.phone}
-                        </TableCell>
-                        <TableCell
-                          sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
-                        >
-                          {registration.email}
-                        </TableCell>
-                        <TableCell
-                          sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
-                        >
-                          {registration.country}
-                        </TableCell>
-                        <TableCell
-                          align="center"
-                          sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
-                        >
-                          {registration.children_under_3}
-                        </TableCell>
-                        <TableCell
-                          align="center"
-                          sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
-                        >
-                          {registration.children_over_3_labs}
-                        </TableCell>
-                        <TableCell
-                          align="center"
-                          sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
-                        >
-                          {registration.adults}
-                        </TableCell>
-                        <TableCell align="center" sx={{ py: 1.5 }}>
-                          <Chip
-                            label={
-                              registration.status === "confirmed"
-                                ? "Confermato"
-                                : "Attesa"
-                            }
-                            size="small"
-                            color={
-                              registration.status === "confirmed"
-                                ? "success"
-                                : "warning"
-                            }
-                            variant="filled"
-                          />
-                        </TableCell>
+                        {columns.map((column) => (
+                          <TableCell
+                            key={`${column.source}:${column.key}`}
+                            align={column.align}
+                            sx={{ py: 1.5, fontSize: 14, color: "#2d3943" }}
+                          >
+                            {column.key === "status" ? (
+                              <StatusChip registration={registration} />
+                            ) : (
+                              (() => {
+                                const ticketRows = getTicketRows(
+                                  registration,
+                                  column,
+                                  fields,
+                                );
+                                return ticketRows ? (
+                                  <TicketBreakdown rows={ticketRows} />
+                                ) : (
+                                  getColumnValue(registration, column, fields)
+                                );
+                              })()
+                            )}
+                          </TableCell>
+                        ))}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -345,31 +384,14 @@ export function AdminRegistrationsTable({
                             alignItems: "flex-start",
                           }}
                         >
-                          <Box>
-                            <Typography
-                              sx={{ fontWeight: 700, color: "#2d3943" }}
-                            >
-                              {registration.first_name} {registration.last_name}
-                            </Typography>
-                            <Typography sx={{ fontSize: 12, color: "#62707c" }}>
-                              {new Date(registration.created_at).toLocaleString(
-                                "it-IT",
-                              )}
-                            </Typography>
-                          </Box>
-                          <Chip
-                            label={
-                              registration.status === "confirmed"
-                                ? "Confermato"
-                                : "Attesa"
-                            }
-                            size="small"
-                            color={
-                              registration.status === "confirmed"
-                                ? "success"
-                                : "warning"
-                            }
-                          />
+                          <Typography sx={{ fontWeight: 700, color: "#2d3943" }}>
+                            {titleColumn
+                              ? getColumnValue(registration, titleColumn, fields)
+                              : ""}
+                          </Typography>
+                          {columns.some((column) => column.key === "status") && (
+                            <StatusChip registration={registration} />
+                          )}
                         </Box>
 
                         <Box
@@ -382,163 +404,47 @@ export function AdminRegistrationsTable({
                             gap: 1,
                           }}
                         >
-                          {showLabMetrics && <Box
-                            sx={{
-                              backgroundColor: "#f8fafc",
-                              p: 1.5,
-                              borderRadius: 1,
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontSize: 11,
-                                color: "#62707c",
-                                fontWeight: 600,
-                              }}
-                            >
-                              Telefono
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontSize: 13,
-                                color: "#2d3943",
-                                fontWeight: 500,
-                              }}
-                            >
-                              {registration.phone}
-                            </Typography>
-                          </Box>}
-                          {showLabMetrics && <Box
-                            sx={{
-                              backgroundColor: "#f8fafc",
-                              p: 1.5,
-                              borderRadius: 1,
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontSize: 11,
-                                color: "#62707c",
-                                fontWeight: 600,
-                              }}
-                            >
-                              Paese
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontSize: 13,
-                                color: "#2d3943",
-                                fontWeight: 500,
-                              }}
-                            >
-                              {registration.country}
-                            </Typography>
-                          </Box>}
-                          {showLabMetrics && <Box
-                            sx={{
-                              backgroundColor: "#f8fafc",
-                              p: 1.5,
-                              borderRadius: 1,
-                              gridColumn: "1 / -1",
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontSize: 11,
-                                color: "#62707c",
-                                fontWeight: 600,
-                              }}
-                            >
-                              Email
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontSize: 13,
-                                color: "#2d3943",
-                                fontWeight: 500,
-                              }}
-                            >
-                              {registration.email}
-                            </Typography>
-                          </Box>}
-                          <Box
-                            sx={{
-                              backgroundColor: "#f8fafc",
-                              p: 1.5,
-                              borderRadius: 1,
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontSize: 11,
-                                color: "#62707c",
-                                fontWeight: 600,
-                              }}
-                            >
-                              Bimbi &lt;3
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontSize: 13,
-                                color: "#2d3943",
-                                fontWeight: 500,
-                              }}
-                            >
-                              {registration.children_under_3}
-                            </Typography>
-                          </Box>
-                          <Box
-                            sx={{
-                              backgroundColor: "#f8fafc",
-                              p: 1.5,
-                              borderRadius: 1,
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontSize: 11,
-                                color: "#62707c",
-                                fontWeight: 600,
-                              }}
-                            >
-                              Bimbi &gt;3
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontSize: 13,
-                                color: "#2d3943",
-                                fontWeight: 500,
-                              }}
-                            >
-                              {registration.children_over_3_labs}
-                            </Typography>
-                          </Box>
-                          <Box
-                            sx={{
-                              backgroundColor: "#f8fafc",
-                              p: 1.5,
-                              borderRadius: 1,
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontSize: 11,
-                                color: "#62707c",
-                                fontWeight: 600,
-                              }}
-                            >
-                              Adulti
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontSize: 13,
-                                color: "#2d3943",
-                                fontWeight: 500,
-                              }}
-                            >
-                              {registration.adults}
-                            </Typography>
-                          </Box>
+                          {cardColumns.map((column) => {
+                            const ticketRows = getTicketRows(
+                              registration,
+                              column,
+                              fields,
+                            );
+                            return (
+                              <Box
+                                key={`${column.source}:${column.key}`}
+                                sx={{
+                                  backgroundColor: "#f8fafc",
+                                  p: 1.5,
+                                  borderRadius: 1,
+                                  gridColumn: ticketRows ? "1 / -1" : undefined,
+                                }}
+                              >
+                                <Typography
+                                  sx={{
+                                    fontSize: 11,
+                                    color: "#62707c",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {column.label}
+                                </Typography>
+                                {ticketRows ? (
+                                  <TicketBreakdown rows={ticketRows} />
+                                ) : (
+                                  <Typography
+                                    sx={{
+                                      fontSize: 13,
+                                      color: "#2d3943",
+                                      fontWeight: 500,
+                                    }}
+                                  >
+                                    {getColumnValue(registration, column, fields)}
+                                  </Typography>
+                                )}
+                              </Box>
+                            );
+                          })}
                         </Box>
                       </Stack>
                     </CardContent>

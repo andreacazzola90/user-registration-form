@@ -3,6 +3,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
 import { escapeCsvValue } from "@/lib/spreadsheet";
 import { recordSecurityEvent } from "@/lib/security";
+import { getColumnValue, resolveDisplayColumns } from "@/lib/registration-columns";
+import type { FormConfig, RegistrationField, RegistrationRecord } from "@/lib/types";
 
 export async function GET(request: Request) {
   const email = await getAdminEmail();
@@ -21,42 +23,48 @@ export async function GET(request: Request) {
     query = query.eq("form_id", formId);
   }
 
-  const { data, error } = await query;
+  const [{ data, error }, formResponse, fieldsResponse] = await Promise.all([
+    query,
+    formId
+      ? supabase
+          .from("forms")
+          .select("slug, table_display_settings")
+          .eq("id", formId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    formId
+      ? supabase
+          .from("registration_fields")
+          .select("*")
+          .eq("form_id", formId)
+          .order("sort_order", { ascending: true })
+      : Promise.resolve({ data: [] as RegistrationField[] }),
+  ]);
 
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
-  const rows = data ?? [];
+  const rows = (data ?? []) as RegistrationRecord[];
+  const fields = (fieldsResponse.data ?? []) as RegistrationField[];
+  const formInfo = formResponse.data as Pick<
+    FormConfig,
+    "slug" | "table_display_settings"
+  > | null;
+  const displaySettings = formInfo?.table_display_settings ?? null;
+  const supportsLabCapacity = formInfo?.slug === "passeggiata-monte-di-malo";
 
-  const header = [
-    "created_at",
-    "first_name",
-    "last_name",
-    "phone",
-    "email",
-    "country",
-    "children_under_3",
-    "children_over_3_labs",
-    "adults",
-    "status",
-  ];
+  const columns = formId
+    ? resolveDisplayColumns(fields, displaySettings, {
+        includeLabColumns: supportsLabCapacity,
+      })
+    : resolveDisplayColumns([], null);
 
   const csvRows = [
-    header.join(","),
+    columns.map((column) => column.label).map(escapeCsvValue).join(","),
     ...rows.map((row) =>
-      [
-        row.created_at,
-        row.first_name,
-        row.last_name,
-        row.phone,
-        row.email,
-        row.country,
-        row.children_under_3,
-        row.children_over_3_labs,
-        row.adults,
-        row.status,
-      ]
+      columns
+        .map((column) => getColumnValue(row, column, fields))
         .map(escapeCsvValue)
         .join(","),
     ),
@@ -75,3 +83,4 @@ export async function GET(request: Request) {
     },
   });
 }
+

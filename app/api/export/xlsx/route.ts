@@ -4,6 +4,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
 import { safeSpreadsheetValue } from "@/lib/spreadsheet";
 import { recordSecurityEvent } from "@/lib/security";
+import { getColumnValue, resolveDisplayColumns } from "@/lib/registration-columns";
+import type { FormConfig, RegistrationField, RegistrationRecord } from "@/lib/types";
 
 export async function GET(request: Request) {
   const email = await getAdminEmail();
@@ -22,41 +24,61 @@ export async function GET(request: Request) {
     query = query.eq("form_id", formId);
   }
 
-  const { data, error } = await query;
+  const [{ data, error }, formResponse, fieldsResponse] = await Promise.all([
+    query,
+    formId
+      ? supabase
+          .from("forms")
+          .select("slug, table_display_settings")
+          .eq("id", formId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    formId
+      ? supabase
+          .from("registration_fields")
+          .select("*")
+          .eq("form_id", formId)
+          .order("sort_order", { ascending: true })
+      : Promise.resolve({ data: [] as RegistrationField[] }),
+  ]);
 
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
-  const rows = data ?? [];
+  const rows = (data ?? []) as RegistrationRecord[];
+  const fields = (fieldsResponse.data ?? []) as RegistrationField[];
+  const formInfo = formResponse.data as Pick<
+    FormConfig,
+    "slug" | "table_display_settings"
+  > | null;
+  const displaySettings = formInfo?.table_display_settings ?? null;
+  const supportsLabCapacity = formInfo?.slug === "passeggiata-monte-di-malo";
+
+  const columns = formId
+    ? resolveDisplayColumns(fields, displaySettings, {
+        includeLabColumns: supportsLabCapacity,
+      })
+    : resolveDisplayColumns([], null);
 
   const workbook = new ExcelJS.Workbook();
   const detailSheet = workbook.addWorksheet("Iscritti");
   const summarySheet = workbook.addWorksheet("Riepilogo");
 
-  detailSheet.columns = [
-    { header: "Data", key: "created_at", width: 24 },
-    { header: "Nome", key: "first_name", width: 18 },
-    { header: "Cognome", key: "last_name", width: 18 },
-    { header: "Telefono", key: "phone", width: 18 },
-    { header: "Email", key: "email", width: 28 },
-    { header: "Paese", key: "country", width: 18 },
-    { header: "Bimbi <3", key: "children_under_3", width: 12 },
-    { header: "Bimbi >3 lab", key: "children_over_3_labs", width: 16 },
-    { header: "Adulti", key: "adults", width: 10 },
-    { header: "Stato", key: "status", width: 14 },
-  ];
+  detailSheet.columns = columns.map((column) => ({
+    header: column.label,
+    key: `${column.source}:${column.key}`,
+    width: 20,
+  }));
 
   rows.forEach((row) => {
-    detailSheet.addRow({
-      ...row,
-      created_at: new Date(row.created_at).toLocaleString("it-IT"),
-      first_name: safeSpreadsheetValue(row.first_name),
-      last_name: safeSpreadsheetValue(row.last_name),
-      phone: safeSpreadsheetValue(row.phone),
-      email: safeSpreadsheetValue(row.email),
-      country: safeSpreadsheetValue(row.country),
+    const rowValues: Record<string, string> = {};
+    columns.forEach((column) => {
+      rowValues[`${column.source}:${column.key}`] = safeSpreadsheetValue(
+        getColumnValue(row, column, fields),
+      );
     });
+    detailSheet.addRow(rowValues);
   });
 
   const totalUnder3 = rows.reduce((acc, row) => acc + row.children_under_3, 0);
@@ -99,3 +121,4 @@ export async function GET(request: Request) {
     },
   });
 }
+

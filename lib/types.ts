@@ -35,6 +35,27 @@ export type FormConfig = {
   slider_data: SliderSlide[];
   is_active: boolean;
   created_at: string;
+  table_display_settings: DisplayColumnSetting[] | null;
+  summary_cards: SummaryCardConfig[] | null;
+};
+
+export type DisplayColumnSource = "standard" | "field";
+
+export type DisplayColumnSetting = {
+  key: string;
+  source: DisplayColumnSource;
+  visible: boolean;
+};
+
+export type SummaryCardMetric = "sum" | "count";
+export type SummaryCardSource = "total" | "standard" | "field";
+
+export type SummaryCardConfig = {
+  id: string;
+  title: string;
+  metric: SummaryCardMetric;
+  source: SummaryCardSource;
+  key: string | null;
 };
 
 export type RegistrationField = {

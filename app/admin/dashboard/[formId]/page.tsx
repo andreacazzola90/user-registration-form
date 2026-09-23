@@ -181,6 +181,7 @@ export default async function FormDashboardPage({ params }: Props) {
         </Box>
 
         <AdminDashboardTabs
+          key={formId}
           formId={formId}
           form={data.form}
           fields={data.fields}
