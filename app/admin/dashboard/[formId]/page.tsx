@@ -48,7 +48,7 @@ async function getFormDashboardData(formId: string) {
       .order("created_at", { ascending: false }),
     supabase
       .from("event_settings")
-      .select("lab_capacity, lab_capacity_enabled, max_participants, registrations_close_at")
+      .select("lab_capacity, lab_capacity_enabled, max_participants, registrations_close_at, cookie_banner_enabled, cookie_text, privacy_text")
       .eq("form_id", formId)
       .limit(1)
       .maybeSingle(),
@@ -73,6 +73,9 @@ async function getFormDashboardData(formId: string) {
       settingsResponse.data?.lab_capacity_enabled ?? false,
     maxParticipants: settingsResponse.data?.max_participants ?? 200,
     registrationsCloseAt: settingsResponse.data?.registrations_close_at ?? null,
+    cookieBannerEnabled: settingsResponse.data?.cookie_banner_enabled ?? false,
+    cookieText: settingsResponse.data?.cookie_text ?? "",
+    privacyText: settingsResponse.data?.privacy_text ?? "",
     email: email ?? "admin",
   };
 }
@@ -189,6 +192,9 @@ export default async function FormDashboardPage({ params }: Props) {
           capacity={data.capacity}
           maxParticipants={data.maxParticipants}
           registrationsCloseAt={data.registrationsCloseAt}
+          cookieBannerEnabled={data.cookieBannerEnabled}
+          cookieText={data.cookieText}
+          privacyText={data.privacyText}
           supportsLabCapacity={data.supportsLabCapacity}
           labCapacityEnabled={data.labCapacityEnabled}
         />

@@ -28,6 +28,9 @@ type Props = {
   capacity: number;
   maxParticipants: number;
   registrationsCloseAt: string | null;
+  cookieBannerEnabled: boolean;
+  cookieText: string;
+  privacyText: string;
   supportsLabCapacity: boolean;
   labCapacityEnabled: boolean;
 };
@@ -56,6 +59,9 @@ export function AdminDashboardTabs({
   capacity,
   maxParticipants,
   registrationsCloseAt,
+  cookieBannerEnabled,
+  cookieText,
+  privacyText,
   supportsLabCapacity,
   labCapacityEnabled,
 }: Props) {
@@ -315,6 +321,9 @@ export function AdminDashboardTabs({
             formId={formId}
             initialMaxParticipants={maxParticipants}
             initialRegistrationsCloseAt={registrationsCloseAt}
+            initialCookieBannerEnabled={cookieBannerEnabled}
+            initialCookieText={cookieText}
+            initialPrivacyText={privacyText}
             totalRegistrations={registrations.length}
           />
         )}

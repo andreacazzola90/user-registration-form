@@ -32,6 +32,9 @@ type Props = {
   fields: RegistrationField[];
   labCapacityReached?: boolean;
   registrationsClosed?: boolean;
+  cookieBannerEnabled?: boolean;
+  cookieText?: string;
+  privacyText?: string;
 };
 
 type SubmitResult = {
@@ -96,6 +99,9 @@ export function RegistrationForm({
   fields,
   labCapacityReached = false,
   registrationsClosed = false,
+  cookieBannerEnabled = false,
+  cookieText = "",
+  privacyText = "",
 }: Props) {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -103,6 +109,7 @@ export function RegistrationForm({
   const submitInFlightRef = useRef(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [toastError, setToastError] = useState<string | null>(null);
+  const [isCookieBannerVisible, setIsCookieBannerVisible] = useState(true);
 
   const orderedFields = useMemo(
     () => [...fields].sort((a, b) => a.sort_order - b.sort_order),
@@ -773,6 +780,45 @@ export function RegistrationForm({
           {isSubmitting ? "Invio in corso" : ""}
         </Box>
       </Box>
+      {cookieBannerEnabled && isCookieBannerVisible && (
+        <Box
+          role="region"
+          aria-label="Informazioni su cookie e privacy"
+          sx={{
+            position: "fixed",
+            zIndex: (theme) => theme.zIndex.snackbar,
+            bottom: 16,
+            left: 16,
+            right: 16,
+            maxWidth: 740,
+            mx: "auto",
+          }}
+        >
+          <Paper
+            elevation={8}
+            sx={{ p: { xs: 2, sm: 2.5 }, border: "1px solid #b9c5d1" }}
+          >
+            <Stack spacing={1.5}>
+              <Typography sx={{ fontWeight: 700 }}>
+                Informazioni su cookie e privacy
+              </Typography>
+              <Typography sx={{ whiteSpace: "pre-wrap", fontSize: 14 }}>
+                {cookieText}
+              </Typography>
+              <Typography sx={{ whiteSpace: "pre-wrap", fontSize: 14 }}>
+                {privacyText}
+              </Typography>
+              <Button
+                onClick={() => setIsCookieBannerVisible(false)}
+                variant="contained"
+                sx={{ alignSelf: "flex-end", textTransform: "none" }}
+              >
+                Chiudi
+              </Button>
+            </Stack>
+          </Paper>
+        </Box>
+      )}
     </ThemeProvider>
   );
 }

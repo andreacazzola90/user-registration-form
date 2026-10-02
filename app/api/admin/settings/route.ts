@@ -10,6 +10,9 @@ const updateSettingsSchema = z.object({
   lab_capacity_enabled: z.boolean().optional(),
   max_participants: z.number().int().positive().optional(),
   registrations_close_at: z.string().datetime().nullable().optional(),
+  cookie_banner_enabled: z.boolean().optional(),
+  cookie_text: z.string().max(10000).optional(),
+  privacy_text: z.string().max(10000).optional(),
 });
 
 async function requireUser() {
@@ -97,6 +100,15 @@ export async function PUT(request: Request) {
           ...(body.registrations_close_at !== undefined
             ? { registrations_close_at: body.registrations_close_at }
             : {}),
+          ...(body.cookie_banner_enabled !== undefined
+            ? { cookie_banner_enabled: body.cookie_banner_enabled }
+            : {}),
+          ...(body.cookie_text !== undefined
+            ? { cookie_text: body.cookie_text }
+            : {}),
+          ...(body.privacy_text !== undefined
+            ? { privacy_text: body.privacy_text }
+            : {}),
         });
 
       if (insertError) {
@@ -127,6 +139,15 @@ export async function PUT(request: Request) {
           : {}),
         ...(body.registrations_close_at !== undefined
           ? { registrations_close_at: body.registrations_close_at }
+          : {}),
+        ...(body.cookie_banner_enabled !== undefined
+          ? { cookie_banner_enabled: body.cookie_banner_enabled }
+          : {}),
+        ...(body.cookie_text !== undefined
+          ? { cookie_text: body.cookie_text }
+          : {}),
+        ...(body.privacy_text !== undefined
+          ? { privacy_text: body.privacy_text }
           : {}),
         updated_at: new Date().toISOString(),
       })

@@ -10,6 +10,8 @@ import {
   TextField,
   Typography,
   Alert,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 
@@ -17,6 +19,9 @@ type Props = {
   formId: string;
   initialMaxParticipants: number;
   initialRegistrationsCloseAt: string | null;
+  initialCookieBannerEnabled: boolean;
+  initialCookieText: string;
+  initialPrivacyText: string;
   totalRegistrations: number;
 };
 
@@ -24,12 +29,20 @@ export function AdminRulesManager({
   formId,
   initialMaxParticipants,
   initialRegistrationsCloseAt,
+  initialCookieBannerEnabled,
+  initialCookieText,
+  initialPrivacyText,
   totalRegistrations,
 }: Props) {
   const [maxParticipants, setMaxParticipants] = useState(initialMaxParticipants);
   const [registrationsCloseAt, setRegistrationsCloseAt] = useState(
     toDateTimeLocalValue(initialRegistrationsCloseAt),
   );
+  const [cookieBannerEnabled, setCookieBannerEnabled] = useState(
+    initialCookieBannerEnabled,
+  );
+  const [cookieText, setCookieText] = useState(initialCookieText);
+  const [privacyText, setPrivacyText] = useState(initialPrivacyText);
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -46,6 +59,9 @@ export function AdminRulesManager({
           form_id: formId,
           max_participants: Number(maxParticipants),
           registrations_close_at: toIsoOrNull(registrationsCloseAt),
+          cookie_banner_enabled: cookieBannerEnabled,
+          cookie_text: cookieText,
+          privacy_text: privacyText,
         }),
       });
 
@@ -128,6 +144,40 @@ export function AdminRulesManager({
                   slotProps={{
                     inputLabel: { shrink: true },
                   }}
+                />
+
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={cookieBannerEnabled}
+                      onChange={(event) =>
+                        setCookieBannerEnabled(event.target.checked)
+                      }
+                    />
+                  }
+                  label="Attiva banner cookie e policy"
+                />
+
+                <TextField
+                  label="Testo cookie"
+                  size="small"
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  value={cookieText}
+                  onChange={(event) => setCookieText(event.target.value)}
+                  helperText="Testo informativo sui cookie mostrato nel banner pubblico."
+                />
+
+                <TextField
+                  label="Testo privacy"
+                  size="small"
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  value={privacyText}
+                  onChange={(event) => setPrivacyText(event.target.value)}
+                  helperText="Testo informativo sulla privacy mostrato nel banner pubblico."
                 />
 
                 <Typography sx={{ fontSize: 14, color: "#62707c" }}>

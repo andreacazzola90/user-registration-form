@@ -22,13 +22,16 @@ export default async function PublicFormPage({ params }: Props) {
   const fields = await getPublicRegistrationFields(form.id);
   let labCapacityReached = false;
   let registrationsClosed = false;
+  let cookieBannerEnabled = false;
+  let cookieText = "";
+  let privacyText = "";
 
   try {
     const supabase = createSupabaseAdminClient();
     const [settingsResponse, confirmedResponse, registrationsCountResponse] = await Promise.all([
       supabase
         .from("event_settings")
-        .select("lab_capacity, lab_capacity_enabled, max_participants, registrations_close_at")
+        .select("lab_capacity, lab_capacity_enabled, max_participants, registrations_close_at, cookie_banner_enabled, cookie_text, privacy_text")
         .eq("form_id", form.id)
         .limit(1)
         .maybeSingle(),
@@ -72,6 +75,10 @@ export default async function PublicFormPage({ params }: Props) {
         }
       }
     }
+
+    cookieBannerEnabled = settingsResponse.data?.cookie_banner_enabled ?? false;
+    cookieText = settingsResponse.data?.cookie_text ?? "";
+    privacyText = settingsResponse.data?.privacy_text ?? "";
   } catch {
     labCapacityReached = false;
     registrationsClosed = false;
@@ -95,6 +102,9 @@ export default async function PublicFormPage({ params }: Props) {
             fields={fields.filter((field) => field.active)}
             labCapacityReached={labCapacityReached}
             registrationsClosed={registrationsClosed}
+            cookieBannerEnabled={cookieBannerEnabled}
+            cookieText={cookieText}
+            privacyText={privacyText}
           />
         </div>
       </section>
