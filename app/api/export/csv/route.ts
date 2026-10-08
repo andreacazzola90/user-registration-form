@@ -3,7 +3,11 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
 import { escapeCsvValue } from "@/lib/spreadsheet";
 import { recordSecurityEvent } from "@/lib/security";
-import { getColumnValue, resolveDisplayColumns } from "@/lib/registration-columns";
+import {
+  getExportColumnValue,
+  resolveDisplayColumns,
+  resolveExportColumns,
+} from "@/lib/registration-columns";
 import type { FormConfig, RegistrationField, RegistrationRecord } from "@/lib/types";
 
 export async function GET(request: Request) {
@@ -54,17 +58,20 @@ export async function GET(request: Request) {
   const displaySettings = formInfo?.table_display_settings ?? null;
   const supportsLabCapacity = formInfo?.slug === "passeggiata-monte-di-malo";
 
-  const columns = formId
+  const displayColumns = formId
     ? resolveDisplayColumns(fields, displaySettings, {
         includeLabColumns: supportsLabCapacity,
       })
     : resolveDisplayColumns([], null);
+  const columns = formId
+    ? resolveExportColumns(displayColumns, fields)
+    : displayColumns;
 
   const csvRows = [
     columns.map((column) => column.label).map(escapeCsvValue).join(","),
     ...rows.map((row) =>
       columns
-        .map((column) => getColumnValue(row, column, fields))
+        .map((column) => getExportColumnValue(row, column, fields))
         .map(escapeCsvValue)
         .join(","),
     ),

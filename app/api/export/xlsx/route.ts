@@ -4,7 +4,11 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
 import { safeSpreadsheetValue } from "@/lib/spreadsheet";
 import { recordSecurityEvent } from "@/lib/security";
-import { getColumnValue, resolveDisplayColumns } from "@/lib/registration-columns";
+import {
+  getExportColumnValue,
+  resolveDisplayColumns,
+  resolveExportColumns,
+} from "@/lib/registration-columns";
 import type { FormConfig, RegistrationField, RegistrationRecord } from "@/lib/types";
 
 export async function GET(request: Request) {
@@ -55,11 +59,14 @@ export async function GET(request: Request) {
   const displaySettings = formInfo?.table_display_settings ?? null;
   const supportsLabCapacity = formInfo?.slug === "passeggiata-monte-di-malo";
 
-  const columns = formId
+  const displayColumns = formId
     ? resolveDisplayColumns(fields, displaySettings, {
         includeLabColumns: supportsLabCapacity,
       })
     : resolveDisplayColumns([], null);
+  const columns = formId
+    ? resolveExportColumns(displayColumns, fields)
+    : displayColumns;
 
   const workbook = new ExcelJS.Workbook();
   const detailSheet = workbook.addWorksheet("Iscritti");
@@ -75,7 +82,7 @@ export async function GET(request: Request) {
     const rowValues: Record<string, string> = {};
     columns.forEach((column) => {
       rowValues[`${column.source}:${column.key}`] = safeSpreadsheetValue(
-        getColumnValue(row, column, fields),
+        getExportColumnValue(row, column, fields),
       );
     });
     detailSheet.addRow(rowValues);

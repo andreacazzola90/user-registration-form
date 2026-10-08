@@ -13,6 +13,15 @@ export type ResolvedColumn = {
   align: "left" | "center";
 };
 
+export type ExportColumn = ResolvedColumn | {
+  key: string;
+  label: string;
+  source: "ticket-option";
+  align: "center";
+  fieldKey: string;
+  optionId: string;
+};
+
 // children_under_3/children_over_3_labs/adults/status are specific to forms with the lab-capacity
 // workflow ("passeggiata-monte-di-malo"): status only ever becomes "waitlist" there, so for every
 // other form (e.g. "andar par veci maronari 2026") it's always "Confermato" and carries no signal.
@@ -225,4 +234,47 @@ export function getColumnValue(
 
   const field = fields.find((item) => item.key === column.key);
   return formatFieldValue(field, registration.additional_data?.[column.key]);
+}
+
+/** Expands each visible ticket field into one export column per configured option. */
+export function resolveExportColumns(
+  columns: ResolvedColumn[],
+  fields: RegistrationField[],
+): ExportColumn[] {
+  const fieldsByKey = new Map(fields.map((field) => [field.key, field]));
+
+  return columns.flatMap<ExportColumn>((column) => {
+    if (column.source !== "field") return [column];
+
+    const field = fieldsByKey.get(column.key);
+    if (field?.field_type !== "tickets") return [column];
+
+    const options = field.options.filter(isTicketOption);
+    if (options.length === 0) return [column];
+
+    return options.map((option) => ({
+      key: `ticket:${field.key}:${option.id}`,
+      label: option.title,
+      source: "ticket-option" as const,
+      align: "center" as const,
+      fieldKey: field.key,
+      optionId: option.id,
+    }));
+  });
+}
+
+/** Returns a spreadsheet cell value, expanding ticket columns to their selected quantity. */
+export function getExportColumnValue(
+  registration: RegistrationRecord,
+  column: ExportColumn,
+  fields: RegistrationField[],
+): string {
+  if (column.source === "ticket-option") {
+    const selection = parseStoredTicketSelection(
+      registration.additional_data?.[column.fieldKey],
+    );
+    return String(selection?.quantities[column.optionId] ?? 0);
+  }
+
+  return getColumnValue(registration, column, fields);
 }
