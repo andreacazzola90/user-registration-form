@@ -330,7 +330,11 @@ export function RegistrationForm({
       onChange: (
         event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
       ) => {
-        const nextValue = event.target.value;
+        const rawValue = event.target.value;
+        const nextValue =
+          field.field_type === "number"
+            ? rawValue.replace(/^(-?)0+(?=\d)/, "$1")
+            : rawValue;
 
         setFormData((prev) => ({ ...prev, [field.key]: nextValue }));
 

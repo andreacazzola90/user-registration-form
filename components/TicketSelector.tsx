@@ -40,10 +40,13 @@ export function TicketSelector({ id, tickets, value, onChange }: Props) {
             key={ticket.id}
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "72px 1fr", sm: "88px 1fr auto" },
-              gap: { xs: 1.5, sm: 2 },
+              gridTemplateColumns: {
+                xs: "48px minmax(0, 1fr) 96px",
+                sm: "72px minmax(0, 1fr) 110px",
+              },
+              gap: { xs: 1, sm: 2 },
               alignItems: "center",
-              py: 2,
+              py: { xs: 1.5, sm: 2 },
             }}
           >
             <Box
@@ -51,18 +54,25 @@ export function TicketSelector({ id, tickets, value, onChange }: Props) {
               src={ticket.imageUrl}
               alt=""
               sx={{
-                width: { xs: 72, sm: 88 },
-                height: { xs: 72, sm: 88 },
+                width: { xs: 48, sm: 72 },
+                height: { xs: 48, sm: 72 },
                 objectFit: "cover",
                 borderRadius: 1,
                 border: "1px solid #d7dee7",
               }}
             />
             <Box sx={{ minWidth: 0 }}>
-              <Typography sx={{ fontWeight: 700, color: "#263241" }}>
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                  color: "#263241",
+                  fontSize: { xs: 13, sm: 14 },
+                  lineHeight: 1.3,
+                }}
+              >
                 {ticket.title}
               </Typography>
-              <Typography sx={{ mt: 0.25, color: "#465568" }}>
+              <Typography sx={{ mt: 0.25, color: "#465568", fontSize: 13 }}>
                 {currencyFormatter.format(ticket.price)}
               </Typography>
             </Box>
@@ -71,13 +81,16 @@ export function TicketSelector({ id, tickets, value, onChange }: Props) {
               type="number"
               size="small"
               value={quantities[ticket.id] ?? 0}
-              onChange={(event) =>
-                setQuantity(ticket.id, Number(event.target.value))
-              }
+              onChange={(event) => {
+                const rawValue = event.target.value;
+                const normalizedValue = rawValue.replace(/^0+(?=\d)/, "");
+                event.currentTarget.value = normalizedValue;
+                setQuantity(ticket.id, Number(normalizedValue));
+              }}
               slotProps={{ htmlInput: { min: 0, max: 99, step: 1 } }}
               sx={{
-                width: 110,
-                gridColumn: { xs: "2", sm: "auto" },
+                width: { xs: 96, sm: 110 },
+                gridColumn: "auto",
               }}
             />
           </Box>
