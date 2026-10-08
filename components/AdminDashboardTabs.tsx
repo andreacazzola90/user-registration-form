@@ -10,6 +10,8 @@ import { AdminLabCapacityManager } from "@/components/AdminLabCapacityManager";
 import { AdminCustomCssManager } from "@/components/AdminCustomCssManager";
 import { AdminColumnsManager } from "@/components/AdminColumnsManager";
 import { AdminSummaryCardsManager } from "@/components/AdminSummaryCardsManager";
+import { AdminEmailSettingsManager } from "@/components/AdminEmailSettingsManager";
+import { AdminEmailTemplatesManager } from "@/components/AdminEmailTemplatesManager";
 import { resolveDisplayColumns } from "@/lib/registration-columns";
 import type {
   DisplayColumnSetting,
@@ -41,6 +43,8 @@ type TabKey =
   | "fields"
   | "contents"
   | "slides"
+  | "email"
+  | "emailTexts"
   | "css"
   | "rules"
   | "labs";
@@ -113,6 +117,16 @@ export function AdminDashboardTabs({
         key: "slides",
         label: "Slide",
         meta: `${form.slider_data?.length || 0}`,
+      },
+      {
+        key: "email",
+        label: "Email",
+        meta: "SMTP",
+      },
+      {
+        key: "emailTexts",
+        label: "Testi email",
+        meta: "modelli",
       },
       {
         key: "css",
@@ -302,6 +316,14 @@ export function AdminDashboardTabs({
               console.log("Slides updated:", updatedForm);
             }}
           />
+        )}
+
+        {activeTab === "email" && (
+          <AdminEmailSettingsManager formId={formId} />
+        )}
+
+        {activeTab === "emailTexts" && (
+          <AdminEmailTemplatesManager formId={formId} />
         )}
 
         {activeTab === "css" && (

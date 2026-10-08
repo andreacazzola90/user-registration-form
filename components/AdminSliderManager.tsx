@@ -173,8 +173,8 @@ export default function AdminSliderManager({
         {slides.map((slide, index) => (
           <Card key={index} className="border border-gray-200">
             <CardContent>
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0 flex-1">
                   <Typography variant="caption" sx={{ color: "#5f6f7b" }}>
                     Titolo
                   </Typography>
@@ -194,13 +194,14 @@ export default function AdminSliderManager({
                     />
                   </div>
                 </div>
-                <div className="flex gap-2 ml-4">
+                <div className="flex w-full flex-col gap-2 sm:flex-row lg:ml-4 lg:w-auto">
                   <Button
                     size="small"
                     variant="outlined"
                     startIcon={<EditIcon />}
                     onClick={() => handleEditSlide(index)}
                     disabled={editingIndex !== null}
+                    className="w-full whitespace-nowrap sm:flex-1 lg:w-auto"
                   >
                     Modifica
                   </Button>
@@ -211,6 +212,7 @@ export default function AdminSliderManager({
                     startIcon={<DeleteIcon />}
                     onClick={() => setDeleteIndex(index)}
                     disabled={editingIndex !== null}
+                    className="w-full whitespace-nowrap sm:flex-1 lg:w-auto"
                   >
                     Elimina
                   </Button>

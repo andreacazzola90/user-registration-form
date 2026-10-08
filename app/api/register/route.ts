@@ -212,6 +212,7 @@ export async function POST(request: Request) {
       }
 
       await sendRegistrationRecapEmail({
+        formId,
         to: email,
         fullName: `${firstName} ${lastName}`.trim() || "partecipante",
         status,
