@@ -147,7 +147,6 @@ export function PublicFormSlider({ slides }: { slides?: SliderSlide[] }) {
         })}
       </div>
       <div key={activeSlideIndex} className="public-slider-content">
-        <div className="public-slider-wash" aria-hidden="true" />
         <div
           key={`${activeSlide.title}-${activeSlideIndex}`}
           className={`public-slider-copy ${textPhaseClassName}`}
@@ -156,7 +155,6 @@ export function PublicFormSlider({ slides }: { slides?: SliderSlide[] }) {
           <p className="public-slider-description">{activeSlide.description}</p>
         </div>
       </div>
-      <div className="public-slider-overlay" aria-hidden="true" />
     </div>
   );
 }

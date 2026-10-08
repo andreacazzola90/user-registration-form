@@ -3,6 +3,7 @@ import { AdminDashboardClient } from "@/components/AdminDashboardClient";
 import { AdminDashboardTabs } from "@/components/AdminDashboardTabs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminEmail } from "@/lib/admin-session";
+import { DEFAULT_PRIVACY_BANNER_TEXT } from "@/lib/privacy";
 import type {
   FormConfig,
   RegistrationField,
@@ -48,7 +49,7 @@ async function getFormDashboardData(formId: string) {
       .order("created_at", { ascending: false }),
     supabase
       .from("event_settings")
-      .select("lab_capacity, lab_capacity_enabled, max_participants, registrations_close_at, cookie_banner_enabled, cookie_text, privacy_text")
+      .select("lab_capacity, lab_capacity_enabled, max_participants, registrations_close_at, cookie_banner_enabled, privacy_text, privacy_markdown")
       .eq("form_id", formId)
       .limit(1)
       .maybeSingle(),
@@ -74,8 +75,10 @@ async function getFormDashboardData(formId: string) {
     maxParticipants: settingsResponse.data?.max_participants ?? 200,
     registrationsCloseAt: settingsResponse.data?.registrations_close_at ?? null,
     cookieBannerEnabled: settingsResponse.data?.cookie_banner_enabled ?? false,
-    cookieText: settingsResponse.data?.cookie_text ?? "",
-    privacyText: settingsResponse.data?.privacy_text ?? "",
+    privacyText:
+      settingsResponse.data?.privacy_text?.trim() ||
+      DEFAULT_PRIVACY_BANNER_TEXT,
+    privacyMarkdown: settingsResponse.data?.privacy_markdown ?? "",
     email: email ?? "admin",
   };
 }
@@ -193,8 +196,8 @@ export default async function FormDashboardPage({ params }: Props) {
           maxParticipants={data.maxParticipants}
           registrationsCloseAt={data.registrationsCloseAt}
           cookieBannerEnabled={data.cookieBannerEnabled}
-          cookieText={data.cookieText}
           privacyText={data.privacyText}
+          privacyMarkdown={data.privacyMarkdown}
           supportsLabCapacity={data.supportsLabCapacity}
           labCapacityEnabled={data.labCapacityEnabled}
         />

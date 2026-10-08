@@ -2,11 +2,17 @@
 
 import { FormEvent, useMemo, useRef, useState } from "react";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DOMPurify from "isomorphic-dompurify";
+import NextLink from "next/link";
 import { TicketSelector } from "@/components/TicketSelector";
 import { parseTicketQuantities } from "@/lib/tickets";
+import { DEFAULT_PRIVACY_BANNER_TEXT } from "@/lib/privacy";
 import {
   Alert,
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
   CircularProgress,
@@ -33,8 +39,9 @@ type Props = {
   labCapacityReached?: boolean;
   registrationsClosed?: boolean;
   cookieBannerEnabled?: boolean;
-  cookieText?: string;
   privacyText?: string;
+  formSlug: string;
+  cookieConsentAccepted?: boolean;
 };
 
 type SubmitResult = {
@@ -100,8 +107,9 @@ export function RegistrationForm({
   labCapacityReached = false,
   registrationsClosed = false,
   cookieBannerEnabled = false,
-  cookieText = "",
-  privacyText = "",
+  privacyText = DEFAULT_PRIVACY_BANNER_TEXT,
+  formSlug,
+  cookieConsentAccepted = false,
 }: Props) {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -109,7 +117,15 @@ export function RegistrationForm({
   const submitInFlightRef = useRef(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [toastError, setToastError] = useState<string | null>(null);
-  const [isCookieBannerVisible, setIsCookieBannerVisible] = useState(true);
+  const [isCookieBannerVisible, setIsCookieBannerVisible] = useState(
+    !cookieConsentAccepted,
+  );
+
+  function acceptCookieBanner() {
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `privacy_consent_${formId}=accepted; Max-Age=31536000; Path=/; SameSite=Lax${secure}`;
+    setIsCookieBannerVisible(false);
+  }
 
   const orderedFields = useMemo(
     () => [...fields].sort((a, b) => a.sort_order - b.sort_order),
@@ -407,8 +423,12 @@ export function RegistrationForm({
   if (registrationsClosed) {
     return (
       <ThemeProvider theme={formTheme}>
-        <Box sx={{ width: "100%", maxWidth: 740, mx: "auto" }}>
+        <Box
+          className="public-registration-closed"
+          sx={{ width: "100%", maxWidth: 740, mx: "auto" }}
+        >
           <Paper
+            className="public-registration-closed-card"
             elevation={0}
             sx={{
               border: "1px solid #b9c5d1",
@@ -481,6 +501,10 @@ export function RegistrationForm({
       <ThemeProvider theme={formTheme}>
         <Box
           component="section"
+          className="public-registration-result"
+          data-result={
+            isErrorPage ? "error" : isWaitlistResult ? "waitlist" : "confirmed"
+          }
           role={isErrorPage ? "alert" : "status"}
           aria-live={isErrorPage ? "assertive" : "polite"}
           aria-atomic="true"
@@ -494,6 +518,7 @@ export function RegistrationForm({
           }}
         >
           <Paper
+            className="public-registration-result-card"
             elevation={0}
             sx={{
               width: "100%",
@@ -514,6 +539,7 @@ export function RegistrationForm({
             }}
           >
             <Box
+              className="public-registration-result-icon"
               aria-hidden="true"
               sx={{
                 width: 72,
@@ -536,6 +562,7 @@ export function RegistrationForm({
               OK
             </Box>
             <Typography
+              className="public-registration-result-title"
               variant="h4"
               sx={{ mb: 1, color: "#1f2f35", fontSize: { xs: 30, md: 42 } }}
             >
@@ -545,11 +572,17 @@ export function RegistrationForm({
                   ? "Inserimento in lista d'attesa"
                   : "Iscrizione avvenuta con successo"}
             </Typography>
-            <Typography sx={{ color: "#2f4450", fontSize: { xs: 16, md: 18 } }}>
+            <Typography
+              className="public-registration-result-message"
+              sx={{ color: "#2f4450", fontSize: { xs: 16, md: 18 } }}
+            >
               {result.message}
             </Typography>
             {result.status && !isErrorPage && (
-              <Typography sx={{ mt: 1.5, color: "#334955", fontSize: 14 }}>
+              <Typography
+                className="public-registration-result-status"
+                sx={{ mt: 1.5, color: "#334955", fontSize: 14 }}
+              >
                 Stato registrazione:{" "}
                 {result.status === "confirmed"
                   ? "Confermata"
@@ -557,7 +590,10 @@ export function RegistrationForm({
               </Typography>
             )}
             {!isErrorPage && (
-              <Typography sx={{ mt: 1.5, color: "#556677", fontSize: 13 }}>
+              <Typography
+                className="public-registration-result-email-note"
+                sx={{ mt: 1.5, color: "#556677", fontSize: 13 }}
+              >
                 Se non ricevi l&apos;email di conferma entro qualche minuto,
                 controlla anche la cartella <strong>Spam</strong> o{" "}
                 <strong>Posta indesiderata</strong>.
@@ -594,66 +630,61 @@ export function RegistrationForm({
             {form.description}
           </Typography>
           <Typography id="registration-form-help" sx={visuallyHiddenSx}>
-            Compila il modulo. In caso di errore, il campo verra' evidenziato e
-            verra' letto il messaggio associato.
+            Compila il modulo. In caso di errore, il campo verra&apos; evidenziato e
+            verra&apos; letto il messaggio associato.
           </Typography>
 
           <Divider sx={{ mb: 2.5 }} />
 
-          <Box
+          <Accordion
+            className="public-walk-info"
+            elevation={0}
+            disableGutters
             sx={{
               mb: 3,
-              p: { xs: 2, md: 2.5 },
-              borderRadius: 2,
               border: "1px solid #c9e4e1",
-              backgroundColor: "#f4fbfa",
+              borderRadius: "8px !important",
+              backgroundColor: "#fff2bc",
+              boxShadow: "none",
+              "&:before": { display: "none" },
+              "&.Mui-expanded": { mb: 3, mt: 0 },
             }}
           >
-            <Typography sx={{ fontSize: 24, fontWeight: 700, mb: 0.5 }}>
-              {form.info_title}
-            </Typography>
-            {/* <Typography sx={{ color: "#334955", mb: 1.5 }}>
-              Prenotazione confermata per il {WALK_DETAILS.date} alle ore{" "}
-              {WALK_DETAILS.startTime}.
-            </Typography> */}
-
-            {sanitizedInfoDescription && (
-              <Box
-                sx={{ color: "#334955", mb: 0.75 }}
-                dangerouslySetInnerHTML={{ __html: sanitizedInfoDescription }}
-              />
-            )}
-
-            {/* <Typography sx={{ color: "#334955", mb: 0.75 }}>
-              Chiediamo puntualita': trattandosi di una passeggiata itinerante,
-              si partira' tutti insieme per garantire ai bambini il regolare
-              svolgimento dei laboratori.
-            </Typography>
-
-            <Typography sx={{ fontWeight: 700, mb: 0.5 }}>
-              Si consiglia di portare:
-            </Typography>
-            <Box
-              component="ul"
-              sx={{ pl: 2.5, mt: 0, mb: 1.5, color: "#334955" }}
+            <AccordionSummary
+              className="public-walk-info-summary"
+              id="walk-info-summary"
+              aria-controls="walk-info-details"
+              expandIcon={<ExpandMoreIcon />}
+              sx={{
+                minHeight: 60,
+                px: { xs: 2, md: 2.5 },
+                "&.Mui-expanded": { minHeight: 60 },
+                "& .MuiAccordionSummary-content, & .MuiAccordionSummary-content.Mui-expanded": {
+                  my: 1.5,
+                },
+              }}
             >
-              {WALK_RECOMMENDED_ITEMS.map((item) => (
-                <Box key={item} component="li" sx={{ mb: 0.25 }}>
-                  {item}
-                </Box>
-              ))}
-            </Box>
-
-            <Typography sx={{ color: "#334955", mb: 0.5 }}>
-              Per il pranzo e' disponibile il ricco stand della Sagra di San
-              Giuseppe nel piazzale della Chiesa.
-            </Typography>
-            <Typography sx={{ color: "#334955" }}>
-              In caso di necessita' o variazioni, rispondi all&apos;email di
-              conferma per essere ricontattato dallo staff di Tra i fili
-              d&apos;erba.
-            </Typography> */}
-          </Box>
+              <Typography
+                className="public-walk-info-title"
+                sx={{ fontSize: 24, fontWeight: 700 }}
+              >
+                {form.info_title}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails
+              id="walk-info-details"
+              className="public-walk-info-details"
+              sx={{ px: { xs: 2, md: 2.5 }, pt: 0, pb: 2.5, color: "#334955" }}
+            >
+              {sanitizedInfoDescription && (
+                <Box
+                  className="public-walk-info-description"
+                  sx={{ mb: 0.75 }}
+                  dangerouslySetInnerHTML={{ __html: sanitizedInfoDescription }}
+                />
+              )}
+            </AccordionDetails>
+          </Accordion>
 
           <Typography sx={{ fontSize: 24, fontWeight: 700, mb: 0.75 }}>
             {form.registration_title}
@@ -663,7 +694,11 @@ export function RegistrationForm({
           </Typography>
 
           {labCapacityReached && (
-            <Alert severity="warning" sx={{ mb: 2.5 }}>
+            <Alert
+              className="public-form-alert public-form-alert-warning"
+              severity="warning"
+              sx={{ mb: 2.5 }}
+            >
               Per il laboratorio e&apos; stato raggiunto il numero massimo di
               partecipanti. Le nuove iscrizioni verranno inserite in lista
               d&apos;attesa.
@@ -674,6 +709,11 @@ export function RegistrationForm({
             {orderedFields.map((field) => (
               <Box
                 key={field.id}
+                className={
+                  fieldErrors[field.key]
+                    ? "public-form-field public-form-field-error"
+                    : "public-form-field"
+                }
                 sx={{
                   border: fieldErrors[field.key]
                     ? "1px solid #b3261e"
@@ -708,6 +748,7 @@ export function RegistrationForm({
             !result.fullPage &&
             result.message === VALIDATION_SUMMARY_MESSAGE && (
               <Alert
+                className="public-form-alert public-form-alert-error"
                 severity="error"
                 role="alert"
                 aria-live="assertive"
@@ -762,12 +803,14 @@ export function RegistrationForm({
         </Paper>
 
         <Snackbar
+          className="public-form-snackbar"
           open={Boolean(toastError)}
           autoHideDuration={6000}
           onClose={() => setToastError(null)}
           anchorOrigin={{ vertical: "top", horizontal: "right" }}
         >
           <Alert
+            className="public-form-alert public-form-alert-error"
             severity="error"
             onClose={() => setToastError(null)}
             sx={{ width: "100%" }}
@@ -783,37 +826,51 @@ export function RegistrationForm({
       {cookieBannerEnabled && isCookieBannerVisible && (
         <Box
           role="region"
-          aria-label="Informazioni su cookie e privacy"
+          aria-label="Informativa privacy"
           sx={{
             position: "fixed",
             zIndex: (theme) => theme.zIndex.snackbar,
             bottom: 16,
-            left: 16,
-            right: 16,
-            maxWidth: 740,
-            mx: "auto",
+            left: { xs: 12, sm: 20 },
+            right: "auto",
+            width: { xs: "calc(100vw - 24px)", sm: 360 },
+            maxWidth: "calc(100vw - 24px)",
           }}
         >
           <Paper
             elevation={8}
-            sx={{ p: { xs: 2, sm: 2.5 }, border: "1px solid #b9c5d1" }}
+            sx={{ p: { xs: 1.5, sm: 2 }, border: "1px solid #b9c5d1" }}
           >
-            <Stack spacing={1.5}>
-              <Typography sx={{ fontWeight: 700 }}>
-                Informazioni su cookie e privacy
+            <Stack spacing={1}>
+              <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
+                Informativa privacy
               </Typography>
-              <Typography sx={{ whiteSpace: "pre-wrap", fontSize: 14 }}>
-                {cookieText}
-              </Typography>
-              <Typography sx={{ whiteSpace: "pre-wrap", fontSize: 14 }}>
+              <Typography
+                sx={{
+                  whiteSpace: "pre-wrap",
+                  fontSize: 13,
+                  maxHeight: 96,
+                  overflowY: "auto",
+                }}
+              >
                 {privacyText}
               </Typography>
               <Button
-                onClick={() => setIsCookieBannerVisible(false)}
+                component={NextLink}
+                href={`/privacy/${formSlug}`}
+                variant="text"
+                size="small"
+                sx={{ alignSelf: "flex-start", textTransform: "none", px: 0 }}
+              >
+                Leggi l&apos;informativa privacy completa
+              </Button>
+              <Button
+                onClick={acceptCookieBanner}
                 variant="contained"
+                size="small"
                 sx={{ alignSelf: "flex-end", textTransform: "none" }}
               >
-                Chiudi
+                Accetta
               </Button>
             </Stack>
           </Paper>

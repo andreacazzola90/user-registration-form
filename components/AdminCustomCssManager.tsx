@@ -22,12 +22,25 @@ type Props = {
   onSaved: (customCss: string, enabled: boolean) => void;
 };
 
-const CSS_PLACEHOLDER = `.public-form-page {
-  background: #f5f5f5;
+const CSS_PLACEHOLDER = `.public-walk-info {
+  border: 1px solid #a57a22 !important;
+  border-radius: 8px !important;
+  background: linear-gradient(135deg, #fff2bc, #f3d36b) !important;
 }
 
-.public-form-content-pane {
-  /* Inserisci qui le tue regole */
+.public-walk-info-summary,
+.public-walk-info-title {
+  color: #704116 !important;
+  font-family: var(--font-serif), Georgia, serif !important;
+}
+
+.public-walk-info-summary .MuiAccordionSummary-expandIconWrapper {
+  color: #456a3c !important;
+}
+
+.public-walk-info-details {
+  border-top: 1px solid rgba(112, 65, 22, 0.24);
+  color: #493019;
 }`;
 
 export function AdminCustomCssManager({
@@ -93,8 +106,8 @@ export function AdminCustomCssManager({
             </Typography>
           </Stack>
           <Typography sx={{ color: "#62707c", mt: 1 }}>
-            Le regole vengono applicate soltanto alla pagina pubblica di questo
-            form e hanno precedenza sugli stili base.
+            Le regole vengono applicate al form, ai relativi esiti e avvisi e
+            alla pagina privacy, con precedenza sugli stili base.
           </Typography>
         </CardContent>
       </Card>

@@ -20,8 +20,8 @@ type Props = {
   initialMaxParticipants: number;
   initialRegistrationsCloseAt: string | null;
   initialCookieBannerEnabled: boolean;
-  initialCookieText: string;
   initialPrivacyText: string;
+  initialPrivacyMarkdown: string;
   totalRegistrations: number;
 };
 
@@ -30,8 +30,8 @@ export function AdminRulesManager({
   initialMaxParticipants,
   initialRegistrationsCloseAt,
   initialCookieBannerEnabled,
-  initialCookieText,
   initialPrivacyText,
+  initialPrivacyMarkdown,
   totalRegistrations,
 }: Props) {
   const [maxParticipants, setMaxParticipants] = useState(initialMaxParticipants);
@@ -41,8 +41,10 @@ export function AdminRulesManager({
   const [cookieBannerEnabled, setCookieBannerEnabled] = useState(
     initialCookieBannerEnabled,
   );
-  const [cookieText, setCookieText] = useState(initialCookieText);
   const [privacyText, setPrivacyText] = useState(initialPrivacyText);
+  const [privacyMarkdown, setPrivacyMarkdown] = useState(
+    initialPrivacyMarkdown,
+  );
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -60,8 +62,8 @@ export function AdminRulesManager({
           max_participants: Number(maxParticipants),
           registrations_close_at: toIsoOrNull(registrationsCloseAt),
           cookie_banner_enabled: cookieBannerEnabled,
-          cookie_text: cookieText,
           privacy_text: privacyText,
+          privacy_markdown: privacyMarkdown,
         }),
       });
 
@@ -159,17 +161,6 @@ export function AdminRulesManager({
                 />
 
                 <TextField
-                  label="Testo cookie"
-                  size="small"
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  value={cookieText}
-                  onChange={(event) => setCookieText(event.target.value)}
-                  helperText="Testo informativo sui cookie mostrato nel banner pubblico."
-                />
-
-                <TextField
                   label="Testo privacy"
                   size="small"
                   fullWidth
@@ -177,7 +168,20 @@ export function AdminRulesManager({
                   minRows={2}
                   value={privacyText}
                   onChange={(event) => setPrivacyText(event.target.value)}
-                  helperText="Testo informativo sulla privacy mostrato nel banner pubblico."
+                  helperText="Testo breve mostrato nel banner, accanto al link all'informativa completa."
+                />
+
+                <TextField
+                  label="Informativa privacy completa (Markdown)"
+                  size="small"
+                  fullWidth
+                  multiline
+                  minRows={10}
+                  value={privacyMarkdown}
+                  onChange={(event) =>
+                    setPrivacyMarkdown(event.target.value)
+                  }
+                  helperText="Contenuto della pagina privacy collegata dal banner cookie. Supporta Markdown."
                 />
 
                 <Typography sx={{ fontSize: 14, color: "#62707c" }}>

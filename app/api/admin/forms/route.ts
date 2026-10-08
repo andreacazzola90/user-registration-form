@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { DEFAULT_REGISTRATION_FIELDS } from "@/lib/default-fields";
 import { getAdminEmail, unauthorizedResponse } from "@/lib/admin-session";
 import { recordSecurityEvent } from "@/lib/security";
+import { DEFAULT_PRIVACY_BANNER_TEXT } from "@/lib/privacy";
 
 const createFormSchema = z.object({
   slug: z
@@ -132,6 +133,8 @@ export async function POST(request: Request) {
         form_id: form.id,
         lab_capacity: body.lab_capacity,
         max_participants: body.max_participants,
+        cookie_text: "",
+        privacy_text: DEFAULT_PRIVACY_BANNER_TEXT,
       });
 
     if (settingsError) {

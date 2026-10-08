@@ -3,6 +3,8 @@ import { RegistrationForm } from "@/components/RegistrationForm";
 import { getPublicFormBySlug } from "@/lib/public-forms";
 import { getPublicRegistrationFields } from "@/lib/public-registration-fields";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { DEFAULT_PRIVACY_BANNER_TEXT } from "@/lib/privacy";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -20,18 +22,20 @@ export default async function PublicFormPage({ params }: Props) {
   }
 
   const fields = await getPublicRegistrationFields(form.id);
+  const cookieConsent = (await cookies()).get(
+    `privacy_consent_${form.id}`,
+  )?.value;
   let labCapacityReached = false;
   let registrationsClosed = false;
   let cookieBannerEnabled = false;
-  let cookieText = "";
-  let privacyText = "";
+  let privacyText = DEFAULT_PRIVACY_BANNER_TEXT;
 
   try {
     const supabase = createSupabaseAdminClient();
     const [settingsResponse, confirmedResponse, registrationsCountResponse] = await Promise.all([
       supabase
         .from("event_settings")
-        .select("lab_capacity, lab_capacity_enabled, max_participants, registrations_close_at, cookie_banner_enabled, cookie_text, privacy_text")
+        .select("lab_capacity, lab_capacity_enabled, max_participants, registrations_close_at, cookie_banner_enabled, privacy_text")
         .eq("form_id", form.id)
         .limit(1)
         .maybeSingle(),
@@ -77,8 +81,9 @@ export default async function PublicFormPage({ params }: Props) {
     }
 
     cookieBannerEnabled = settingsResponse.data?.cookie_banner_enabled ?? false;
-    cookieText = settingsResponse.data?.cookie_text ?? "";
-    privacyText = settingsResponse.data?.privacy_text ?? "";
+    privacyText =
+      settingsResponse.data?.privacy_text?.trim() ||
+      DEFAULT_PRIVACY_BANNER_TEXT;
   } catch {
     labCapacityReached = false;
     registrationsClosed = false;
@@ -103,8 +108,9 @@ export default async function PublicFormPage({ params }: Props) {
             labCapacityReached={labCapacityReached}
             registrationsClosed={registrationsClosed}
             cookieBannerEnabled={cookieBannerEnabled}
-            cookieText={cookieText}
             privacyText={privacyText}
+            formSlug={form.slug}
+            cookieConsentAccepted={cookieConsent === "accepted"}
           />
         </div>
       </section>

@@ -11,8 +11,8 @@ const updateSettingsSchema = z.object({
   max_participants: z.number().int().positive().optional(),
   registrations_close_at: z.string().datetime().nullable().optional(),
   cookie_banner_enabled: z.boolean().optional(),
-  cookie_text: z.string().max(10000).optional(),
   privacy_text: z.string().max(10000).optional(),
+  privacy_markdown: z.string().max(50000).optional(),
 });
 
 async function requireUser() {
@@ -103,11 +103,11 @@ export async function PUT(request: Request) {
           ...(body.cookie_banner_enabled !== undefined
             ? { cookie_banner_enabled: body.cookie_banner_enabled }
             : {}),
-          ...(body.cookie_text !== undefined
-            ? { cookie_text: body.cookie_text }
-            : {}),
           ...(body.privacy_text !== undefined
             ? { privacy_text: body.privacy_text }
+            : {}),
+          ...(body.privacy_markdown !== undefined
+            ? { privacy_markdown: body.privacy_markdown }
             : {}),
         });
 
@@ -143,11 +143,11 @@ export async function PUT(request: Request) {
         ...(body.cookie_banner_enabled !== undefined
           ? { cookie_banner_enabled: body.cookie_banner_enabled }
           : {}),
-        ...(body.cookie_text !== undefined
-          ? { cookie_text: body.cookie_text }
-          : {}),
         ...(body.privacy_text !== undefined
           ? { privacy_text: body.privacy_text }
+          : {}),
+        ...(body.privacy_markdown !== undefined
+          ? { privacy_markdown: body.privacy_markdown }
           : {}),
         updated_at: new Date().toISOString(),
       })

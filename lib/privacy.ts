@@ -1,0 +1,2 @@
+export const DEFAULT_PRIVACY_BANNER_TEXT =
+  "Useremo i dati che inserisci per gestire la tua iscrizione e le comunicazioni relative all’evento. Per conoscere il titolare del trattamento, le finalità e la base giuridica, i tempi di conservazione e i tuoi diritti, consulta l’informativa privacy completa.";
