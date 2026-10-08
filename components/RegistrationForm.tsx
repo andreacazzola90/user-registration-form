@@ -743,6 +743,20 @@ export function RegistrationForm({
                     </Box>
                   )}
                 </Typography>
+                {field.suggestion?.trim() && (
+                  <Typography
+                    className="public-field-suggestion"
+                    sx={{
+                      color: "#5d6870",
+                      fontSize: 13,
+                      lineHeight: 1.4,
+                      mt: -0.25,
+                      mb: 0.75,
+                    }}
+                  >
+                    {field.suggestion}
+                  </Typography>
+                )}
                 {renderField(field)}
               </Box>
             ))}

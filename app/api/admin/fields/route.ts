@@ -26,6 +26,7 @@ const ticketOptionSchema = z.object({
 const updateSchema = z.object({
   id: z.string().uuid(),
   label: z.string().min(2),
+  suggestion: z.string().max(2000).optional(),
   field_type: z.enum([
     "text",
     "email",
@@ -87,6 +88,7 @@ export async function POST(request: Request) {
       .insert({
         key: body.key,
         label: body.label,
+        suggestion: "",
         form_id: body.form_id,
         field_type: "text",
         required: false,
@@ -135,6 +137,7 @@ export async function PUT(request: Request) {
       .from("registration_fields")
       .update({
         label: body.label,
+        suggestion: body.suggestion ?? "",
         field_type: body.field_type,
         required: body.required,
         active: body.active,

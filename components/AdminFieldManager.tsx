@@ -342,6 +342,17 @@ export function AdminFieldManager({ formId, initialFields }: Props) {
                   </TextField>
                 </Box>
 
+                <TextField
+                  label="Suggerimento"
+                  size="small"
+                  fullWidth
+                  value={field.suggestion ?? ""}
+                  onChange={(event) =>
+                    updateField(index, { suggestion: event.target.value })
+                  }
+                  placeholder="Testo di aiuto facoltativo mostrato sotto la label"
+                />
+
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                   <FormControlLabel
                     control={

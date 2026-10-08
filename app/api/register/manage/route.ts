@@ -125,6 +125,19 @@ export async function GET(request: Request) {
       );
     }
 
+    const { data: form, error: formError } = await supabase
+      .from("forms")
+      .select("custom_css, custom_css_enabled")
+      .eq("id", authResult.registration.form_id)
+      .maybeSingle();
+
+    if (formError) {
+      return NextResponse.json(
+        { message: formError.message },
+        { status: 500 },
+      );
+    }
+
     const row = authResult.registration;
     const mergedValues = {
       first_name: row.first_name,
@@ -149,6 +162,10 @@ export async function GET(request: Request) {
         values: mergedValues,
       },
       fields: (fields ?? []) as RegistrationField[],
+      form: {
+        customCss: form?.custom_css ?? "",
+        customCssEnabled: form?.custom_css_enabled ?? false,
+      },
     });
   } catch {
     return NextResponse.json({ message: "Errore inatteso" }, { status: 500 });

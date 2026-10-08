@@ -106,8 +106,9 @@ export function AdminCustomCssManager({
             </Typography>
           </Stack>
           <Typography sx={{ color: "#62707c", mt: 1 }}>
-            Le regole vengono applicate al form, ai relativi esiti e avvisi e
-            alla pagina privacy, con precedenza sugli stili base.
+            Le regole vengono applicate al form, alla gestione prenotazione,
+            alla pagina privacy e ai relativi esiti e avvisi, con precedenza
+            sugli stili base.
           </Typography>
         </CardContent>
       </Card>

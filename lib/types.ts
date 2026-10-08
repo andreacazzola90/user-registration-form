@@ -62,6 +62,7 @@ export type RegistrationField = {
   id: string;
   key: string;
   label: string;
+  suggestion?: string;
   field_type: FieldType;
   required: boolean;
   active: boolean;

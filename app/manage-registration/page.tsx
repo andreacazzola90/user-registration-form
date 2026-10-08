@@ -23,6 +23,10 @@ type RegistrationValues = Record<string, string | number>;
 type LoadResponse = {
   ok: boolean;
   fields: RegistrationField[];
+  form: {
+    customCss: string;
+    customCssEnabled: boolean;
+  };
   registration: {
     id: string;
     status: "confirmed" | "waitlist";
@@ -45,6 +49,8 @@ const formTheme = createTheme({
 
 export default function ManageRegistrationPage() {
   const [fields, setFields] = useState<RegistrationField[]>([]);
+  const [customCss, setCustomCss] = useState("");
+  const [customCssEnabled, setCustomCssEnabled] = useState(false);
   const [formData, setFormData] = useState<RegistrationValues>({});
   const [registrationId, setRegistrationId] = useState("");
   const [token, setToken] = useState("");
@@ -92,6 +98,8 @@ export default function ManageRegistrationPage() {
         }
 
         setFields(data.fields.filter((field) => field.active));
+        setCustomCss(data.form.customCss);
+        setCustomCssEnabled(data.form.customCssEnabled);
         setFormData(data.registration.values);
         setStatus(data.registration.status);
       })
@@ -258,61 +266,81 @@ export default function ManageRegistrationPage() {
     return (
       <ThemeProvider theme={formTheme}>
         <Box
-          component="section"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
+          component="main"
+          className="public-form-page"
           sx={{
             minHeight: "100vh",
-            width: "100%",
             display: "grid",
             placeItems: "center",
-            px: 2,
-            py: 4,
+            p: 2,
           }}
         >
-          <Paper
-            elevation={0}
+          <Box
+            component="section"
+            className="public-registration-result"
+            data-result="confirmed"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
             sx={{
               width: "100%",
-              maxWidth: 760,
-              border: "1px solid #cdeee9",
-              borderRadius: 3,
-              p: { xs: 3, md: 6 },
-              textAlign: "center",
-              backgroundColor: "#f3fffd",
+              display: "grid",
+              placeItems: "center",
+              py: { xs: 2, md: 4 },
             }}
           >
-            <Box
-              aria-hidden="true"
+            <Paper
+              className="public-registration-result-card"
+              elevation={0}
               sx={{
-                width: 72,
-                height: 72,
-                borderRadius: "50%",
-                backgroundColor: "#0f8a84",
-                color: "#fff",
-                display: "grid",
-                placeItems: "center",
-                fontSize: 22,
-                fontWeight: 700,
-                mx: "auto",
-                mb: 1.5,
+                width: "100%",
+                maxWidth: 760,
+                border: "1px solid #cdeee9",
+                borderRadius: 3,
+                p: { xs: 3, md: 6 },
+                textAlign: "center",
+                backgroundColor: "#f3fffd",
               }}
             >
-              OK
-            </Box>
-            <Typography
-              variant="h4"
-              sx={{ mb: 1, color: "#1f2f35", fontSize: { xs: 30, md: 42 } }}
-            >
-              {successPage.type === "updated"
-                ? "Prenotazione aggiornata"
-                : "Prenotazione cancellata"}
-            </Typography>
-            <Typography sx={{ color: "#2f4450", fontSize: { xs: 16, md: 18 } }}>
-              {successPage.text}
-            </Typography>
-          </Paper>
+              <Box
+                className="public-registration-result-icon"
+                aria-hidden="true"
+                sx={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: "50%",
+                  backgroundColor: "#0f8a84",
+                  color: "#fff",
+                  display: "grid",
+                  placeItems: "center",
+                  fontSize: 22,
+                  fontWeight: 700,
+                  mx: "auto",
+                  mb: 1.5,
+                }}
+              >
+                OK
+              </Box>
+              <Typography
+                className="public-registration-result-title"
+                variant="h4"
+                sx={{ mb: 1, color: "#1f2f35", fontSize: { xs: 30, md: 42 } }}
+              >
+                {successPage.type === "updated"
+                  ? "Prenotazione aggiornata"
+                  : "Prenotazione cancellata"}
+              </Typography>
+              <Typography
+                className="public-registration-result-message"
+                sx={{ color: "#2f4450", fontSize: { xs: 16, md: 18 } }}
+              >
+                {successPage.text}
+              </Typography>
+            </Paper>
+          </Box>
+          {customCssEnabled && customCss && (
+            <style data-form-custom-css>{customCss}</style>
+          )}
         </Box>
       </ThemeProvider>
     );
@@ -320,22 +348,24 @@ export default function ManageRegistrationPage() {
 
   return (
     <ThemeProvider theme={formTheme}>
-      <main className="admin-backdrop min-h-screen">
-        <div className="public-shell py-8 md:py-12">
+      <main className="admin-backdrop min-h-screen public-form-page">
+        <div className="public-shell public-form-content-inner py-8 md:py-12">
           <Box
             component="form"
             onSubmit={handleSave}
+            aria-labelledby="registration-form-title"
+            aria-describedby="registration-form-summary"
             sx={{ width: "100%", maxWidth: 740, mx: "auto" }}
           >
             <Paper
               elevation={0}
               sx={{ border: "1px solid #d9dfe7", p: { xs: 2.5, md: 4 } }}
             >
-              <Typography variant="h4" sx={{ mb: 1 }}>
+              <Typography id="registration-form-title" variant="h4" sx={{ mb: 1 }}>
                 Gestisci la tua prenotazione
               </Typography>
 
-              <Typography sx={{ color: "#62707c", mb: 2.5 }}>
+              <Typography id="registration-form-summary" sx={{ color: "#62707c", mb: 2.5 }}>
                 Qui puoi modificare i dati inviati o cancellare la prenotazione.
               </Typography>
 
@@ -355,6 +385,7 @@ export default function ManageRegistrationPage() {
                   {orderedFields.map((field) => (
                     <Box
                       key={field.id}
+                      className="public-form-field"
                       sx={{
                         border: "1px solid #d7dee6",
                         borderRadius: 2,
@@ -363,11 +394,27 @@ export default function ManageRegistrationPage() {
                       }}
                     >
                       <Typography
+                        component="label"
+                        id={`${field.key}-label`}
+                        htmlFor={field.key}
                         sx={{ fontWeight: 700, color: "#2d3943", mb: 0.75 }}
                       >
                         {field.label}
                         {field.required ? " *" : ""}
                       </Typography>
+                      {field.suggestion?.trim() && (
+                        <Typography
+                          className="public-field-suggestion"
+                          sx={{
+                            color: "#5d6870",
+                            fontSize: 13,
+                            lineHeight: 1.4,
+                            mb: 0.75,
+                          }}
+                        >
+                          {field.suggestion}
+                        </Typography>
+                      )}
                       {renderField(field)}
                     </Box>
                   ))}
@@ -418,11 +465,18 @@ export default function ManageRegistrationPage() {
             </Paper>
 
             {message && (
-              <Alert severity={message.type} sx={{ mt: 2 }}>
+              <Alert
+                className={`public-form-alert public-form-alert-${message.type}`}
+                severity={message.type}
+                sx={{ mt: 2 }}
+              >
                 {message.text}
               </Alert>
             )}
           </Box>
+          {customCssEnabled && customCss && (
+            <style data-form-custom-css>{customCss}</style>
+          )}
         </div>
       </main>
     </ThemeProvider>
