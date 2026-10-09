@@ -48,7 +48,7 @@ export type DisplayColumnSetting = {
 };
 
 export type SummaryCardMetric = "sum" | "count";
-export type SummaryCardSource = "total" | "standard" | "field";
+export type SummaryCardSource = "total" | "standard" | "field" | "tickets";
 
 export type SummaryCardConfig = {
   id: string;

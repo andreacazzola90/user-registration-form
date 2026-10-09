@@ -154,7 +154,12 @@ export function AdminSummaryCardsManager({
                     updateCard(index, {
                       source: source as SummaryCardConfig["source"],
                       key: source === "total" ? null : key,
-                      metric: source === "total" ? "count" : card.metric,
+                      metric:
+                        source === "total"
+                          ? "count"
+                          : source === "tickets"
+                            ? "sum"
+                            : card.metric,
                     });
                   }}
                   slotProps={{ select: { native: true } }}
@@ -176,7 +181,9 @@ export function AdminSummaryCardsManager({
                   size="small"
                   fullWidth
                   value={card.metric}
-                  disabled={card.source === "total"}
+                  disabled={
+                    card.source === "total" || card.source === "tickets"
+                  }
                   onChange={(e) =>
                     updateCard(index, {
                       metric: e.target.value as SummaryCardConfig["metric"],

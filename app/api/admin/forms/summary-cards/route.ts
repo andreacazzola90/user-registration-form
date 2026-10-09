@@ -8,7 +8,7 @@ const cardSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   metric: z.enum(["sum", "count"]),
-  source: z.enum(["total", "standard", "field"]),
+  source: z.enum(["total", "standard", "field", "tickets"]),
   key: z.string().nullable(),
 });
 

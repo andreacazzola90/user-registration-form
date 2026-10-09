@@ -4,9 +4,10 @@ import type {
   SummaryCardConfig,
 } from "@/lib/types";
 import { RESERVED_STANDARD_KEYS } from "@/lib/registration-columns";
+import { parseStoredTicketSelection } from "@/lib/tickets";
 
 export type SummaryMetricOption = {
-  source: "standard" | "field";
+  source: "standard" | "field" | "tickets";
   key: string;
   label: string;
 };
@@ -41,8 +42,16 @@ export function getAvailableSummaryMetricOptions(
   ).map(({ source, key, label }) => ({ source, key, label }));
 
   const fieldOptions: SummaryMetricOption[] = fields
-    .filter((field) => field.active && field.field_type !== "tickets")
-    .map((field) => ({ source: "field", key: field.key, label: field.label }));
+    .filter((field) => field.active)
+    .map((field) =>
+      field.field_type === "tickets"
+        ? {
+            source: "tickets",
+            key: field.key,
+            label: `${field.label} (partecipanti)`,
+          }
+        : { source: "field", key: field.key, label: field.label },
+    );
 
   return [...standardOptions, ...fieldOptions];
 }
@@ -70,6 +79,19 @@ export function computeSummaryCardValue(
 ): number {
   if (config.source === "total") {
     return registrations.length;
+  }
+
+  if (config.source === "tickets") {
+    return registrations.reduce((sum, registration) => {
+      const selection = parseStoredTicketSelection(
+        registration.additional_data?.[config.key ?? ""],
+      );
+      return (
+        sum +
+        (selection?.items.reduce((itemSum, item) => itemSum + item.quantity, 0) ??
+          0)
+      );
+    }, 0);
   }
 
   if (config.metric === "sum") {
