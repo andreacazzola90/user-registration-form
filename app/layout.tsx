@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { Cormorant_Garamond, Nunito } from "next/font/google";
 import "./globals.css";
@@ -32,6 +33,7 @@ export default function RootLayout({
       >
         <AppRouterCacheProvider>{children}</AppRouterCacheProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
