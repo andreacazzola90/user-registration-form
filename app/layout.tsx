@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { Cormorant_Garamond, Nunito } from "next/font/google";
 import "./globals.css";
@@ -30,6 +31,7 @@ export default function RootLayout({
         className={`${sans.variable} ${serif.variable} font-[var(--font-sans)] m-0`}
       >
         <AppRouterCacheProvider>{children}</AppRouterCacheProvider>
+        <Analytics />
       </body>
     </html>
   );
