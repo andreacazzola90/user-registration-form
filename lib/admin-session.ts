@@ -4,7 +4,7 @@ import { verifyAdminSessionToken } from "@/lib/admin-session-token";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const SESSION_COOKIE_NAME = "admin_session";
-export const SESSION_COOKIE_MAX_AGE = 60 * 60 * 8; // 8 hours
+export const SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 export async function getAdminEmail(): Promise<string | null> {
   const cookieStore = await cookies();
