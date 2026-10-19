@@ -16,6 +16,7 @@ type RegistrationEmailPayload = {
   recapFields: RecapField[];
   manageUrl?: string;
   cancelUrl?: string;
+  templateType?: "update";
 };
 
 const RECENT_SEND_WINDOW_MS = 30_000;
@@ -28,6 +29,7 @@ function buildSendFingerprint(payload: RegistrationEmailPayload) {
         to: payload.to.trim().toLowerCase(),
         fullName: payload.fullName.trim(),
         status: payload.status,
+        templateType: payload.templateType ?? "registration",
         recapFields: payload.recapFields,
         manageUrl: payload.manageUrl ?? "",
         cancelUrl: payload.cancelUrl ?? "",
@@ -91,7 +93,7 @@ function buildHtmlBody(
   template: string,
   recapFields: RecapField[],
   contactEmail: string,
-  cancelUrl?: string,
+  managementUrl?: string,
 ) {
   const participantsCount = getParticipantsCount(recapFields);
   const participantsText =
@@ -109,8 +111,8 @@ function buildHtmlBody(
     "{{email_contatto}}": contactEmail || "",
   };
   const recapTable = `<table style="width:100%;border-collapse:collapse;background:#fff;">${rows}</table>`;
-  const cancelLink = cancelUrl
-    ? `<p>Puoi gestire o eliminare la tua prenotazione da questo link: <a href="${escapeHtml(cancelUrl)}">Gestisci prenotazione</a></p>`
+  const cancelLink = managementUrl
+    ? `<p>Puoi gestire la tua prenotazione da questo link: <a href="${escapeHtml(managementUrl)}">Gestisci prenotazione</a></p>`
     : "";
   const renderedBlocks = template
     .trim()
@@ -144,7 +146,10 @@ export async function sendRegistrationRecapEmail(
   console.log("[SMTP] sendRegistrationRecapEmail called for:", payload.to);
 
   const fingerprint = buildSendFingerprint(payload);
-  if (isDuplicateRecentSend(fingerprint)) {
+  if (
+    payload.templateType !== "update" &&
+    isDuplicateRecentSend(fingerprint)
+  ) {
     console.warn("[SMTP] Duplicate email send suppressed for:", payload.to);
     return true;
   }
@@ -167,12 +172,18 @@ export async function sendRegistrationRecapEmail(
 
   const emailTemplates = await getFormEmailTemplates(payload.formId);
   const isConfirmed = payload.status === "confirmed";
-  const subjectTemplate = isConfirmed
-    ? emailTemplates.confirmationSubject
-    : emailTemplates.waitlistSubject;
-  const bodyTemplate = isConfirmed
-    ? emailTemplates.confirmationBody
-    : emailTemplates.waitlistBody;
+  const subjectTemplate =
+    payload.templateType === "update"
+      ? emailTemplates.updateSubject
+      : isConfirmed
+        ? emailTemplates.confirmationSubject
+        : emailTemplates.waitlistSubject;
+  const bodyTemplate =
+    payload.templateType === "update"
+      ? emailTemplates.updateBody
+      : isConfirmed
+        ? emailTemplates.confirmationBody
+        : emailTemplates.waitlistBody;
 
   const transporter = nodemailer.createTransport({
     host: config.host,
@@ -200,7 +211,9 @@ export async function sendRegistrationRecapEmail(
       bodyTemplate,
       payload.recapFields,
       process.env.CONTACT_EMAIL?.trim() || config.fromEmail,
-      payload.cancelUrl,
+      payload.templateType === "update"
+        ? payload.manageUrl
+        : payload.cancelUrl,
     ),
   });
 

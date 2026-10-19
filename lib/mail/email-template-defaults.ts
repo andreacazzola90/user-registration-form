@@ -3,6 +3,8 @@ export type FormEmailTemplates = {
   confirmationBody: string;
   waitlistSubject: string;
   waitlistBody: string;
+  updateSubject: string;
+  updateBody: string;
 };
 
 export const DEFAULT_FORM_EMAIL_TEMPLATES: FormEmailTemplates = {
@@ -48,6 +50,19 @@ Per necessita o variazioni, contattaci all'indirizzo: {{email_contatto}}
 Riepilogo dei dati inseriti:
 {{riepilogo}}
 
+{{link_cancellazione}}
+
+Cordiali saluti,
+Lo Staff di "Tra i fili d'erba"`,
+  updateSubject: "Conferma modifica prenotazione - {{nome}}",
+  updateBody: `Gentile {{nome}},
+
+la tua prenotazione è stata aggiornata con successo. Di seguito trovi il riepilogo aggiornato dei dati inseriti.
+
+Riepilogo aggiornato:
+{{riepilogo}}
+
+Puoi visualizzare o modificare la prenotazione da questo link:
 {{link_cancellazione}}
 
 Cordiali saluti,

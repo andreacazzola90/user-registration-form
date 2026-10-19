@@ -174,6 +174,33 @@ export function AdminEmailTemplatesManager({
         />
       </Stack>
 
+      <Stack spacing={2}>
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          Conferma modifica prenotazione
+        </Typography>
+        <TextField
+          label="Oggetto"
+          value={templates.updateSubject}
+          onChange={(event) =>
+            updateTemplate("updateSubject", event.target.value)
+          }
+          required
+          disabled={disabled}
+          fullWidth
+        />
+        <TextField
+          label="Corpo email"
+          value={templates.updateBody}
+          onChange={(event) => updateTemplate("updateBody", event.target.value)}
+          helperText={placeholders}
+          required
+          disabled={disabled}
+          multiline
+          minRows={10}
+          fullWidth
+        />
+      </Stack>
+
       <Button
         type="submit"
         variant="contained"

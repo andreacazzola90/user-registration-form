@@ -14,6 +14,8 @@ const updateEmailTemplatesSchema = z.object({
   confirmationBody: z.string().trim().min(1).max(20_000),
   waitlistSubject: z.string().trim().min(1).max(300),
   waitlistBody: z.string().trim().min(1).max(20_000),
+  updateSubject: z.string().trim().min(1).max(300),
+  updateBody: z.string().trim().min(1).max(20_000),
 });
 
 export async function GET(request: Request) {
@@ -47,6 +49,8 @@ export async function PUT(request: Request) {
       confirmationBody: templates.confirmationBody,
       waitlistSubject: templates.waitlistSubject,
       waitlistBody: templates.waitlistBody,
+      updateSubject: templates.updateSubject,
+      updateBody: templates.updateBody,
     });
     await recordSecurityEvent(request, "admin_email_templates_updated", email, {
       formId: templates.formId,

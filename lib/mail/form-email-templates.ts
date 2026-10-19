@@ -12,7 +12,7 @@ export async function getFormEmailTemplates(
   const { data, error } = await supabase
     .from("form_email_templates")
     .select(
-      "confirmation_subject, confirmation_body, waitlist_subject, waitlist_body",
+      "confirmation_subject, confirmation_body, waitlist_subject, waitlist_body, update_subject, update_body",
     )
     .eq("form_id", formId)
     .maybeSingle();
@@ -31,6 +31,9 @@ export async function getFormEmailTemplates(
     confirmationBody: data.confirmation_body,
     waitlistSubject: data.waitlist_subject,
     waitlistBody: data.waitlist_body,
+    updateSubject:
+      data.update_subject ?? DEFAULT_FORM_EMAIL_TEMPLATES.updateSubject,
+    updateBody: data.update_body ?? DEFAULT_FORM_EMAIL_TEMPLATES.updateBody,
   };
 }
 
@@ -46,6 +49,8 @@ export async function saveFormEmailTemplates(
       confirmation_body: templates.confirmationBody,
       waitlist_subject: templates.waitlistSubject,
       waitlist_body: templates.waitlistBody,
+      update_subject: templates.updateSubject,
+      update_body: templates.updateBody,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "form_id" },

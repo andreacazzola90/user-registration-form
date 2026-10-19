@@ -3,8 +3,16 @@ import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyRegistrationManageToken } from "@/lib/registration-manage-token";
 import type { RegistrationField, TicketOption } from "@/lib/types";
-import { normalizeTicketSelection } from "@/lib/tickets";
+import {
+  formatTicketSelection,
+  normalizeTicketSelection,
+} from "@/lib/tickets";
 import { consumeRateLimit } from "@/lib/security";
+import { sendRegistrationRecapEmail } from "@/lib/mail/smtp";
+import {
+  buildManageRegistrationUrls,
+  createRegistrationManageToken,
+} from "@/lib/registration-manage-token";
 
 const KNOWN_KEYS = new Set([
   "first_name",
@@ -287,9 +295,53 @@ export async function PATCH(request: Request) {
       );
     }
 
+    let emailSent = false;
+    try {
+      const recapFields = activeFields
+        .map((field) => {
+          const raw = body.payload[field.key];
+          return {
+            label: field.label,
+            value:
+              field.field_type === "tickets"
+                ? formatTicketSelection(raw)
+                : typeof raw === "number"
+                  ? String(raw)
+                  : String(raw ?? "").trim(),
+          };
+        })
+        .filter((field) => field.value.length > 0);
+
+      const manageToken = createRegistrationManageToken(body.id, email);
+      const links = buildManageRegistrationUrls(
+        body.id,
+        manageToken,
+        new URL(request.url).origin,
+      );
+
+      emailSent = await sendRegistrationRecapEmail({
+        formId: authResult.registration.form_id,
+        to: email,
+        fullName: `${firstName} ${lastName}`.trim() || "partecipante",
+        status:
+          authResult.registration.status === "waitlist"
+            ? "waitlist"
+            : "confirmed",
+        recapFields,
+        manageUrl: links?.manageUrl,
+        cancelUrl: links?.cancelUrl,
+        templateType: "update",
+      });
+    } catch (mailError) {
+      console.error("Failed to send registration update email", mailError);
+    }
+
     return NextResponse.json({
       ok: true,
-      message: "Prenotazione aggiornata con successo",
+      emailSent,
+      message: emailSent
+        ? "Prenotazione aggiornata con successo. Ti abbiamo inviato una email con i nuovi dati."
+        : "Prenotazione aggiornata con successo, ma non è stato possibile inviare l'email di conferma.",
     });
   } catch {
     return NextResponse.json(
